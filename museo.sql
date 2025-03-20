@@ -126,4 +126,5 @@ CREATE TABLE IF NOT EXISTS Collaborazioni_Mostre_temporanee (
     FOREIGN KEY (ente_collaborante) REFERENCES Collaborazioni(ente)
 );
 
---va eliminato l'attributo esterno da restauri 
+
+
