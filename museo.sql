@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS Artisti(
     nome VARCHAR(32),
     cognome VARCHAR(32),
     nazionalità VARCHAR(64) NOT NULL,
-    sesso VARCHAR(64) NOT NULL,
-    data_di_nascita VARCHAR(64) NOT NULL,
+    sesso VARCHAR(64),
+    data_di_nascita VARCHAR(64),
     data_di_morte VARCHAR(64)
 );
 
@@ -41,7 +41,8 @@ CREATE TABLE IF NOT EXISTS Zone_ (
     ala VARCHAR(64) NOT NULL,
     piano INT NOT NULL,
     responsabile VARCHAR(16) NOT NULL,
-    FOREIGN KEY (responsabile) REFERENCES Responsabili(codice_fiscale)
+    FOREIGN KEY (responsabile) REFERENCES Responsabili(codice_fiscale),
+    --fare un check sul responsabile che sia almeno di livello 3 su 5
 );
 
 CREATE TABLE IF NOT EXISTS Mostre(
@@ -125,3 +126,4 @@ CREATE TABLE IF NOT EXISTS Collaborazioni_Mostre_temporanee (
     FOREIGN KEY (ente_collaborante) REFERENCES Collaborazioni(ente)
 );
 
+--va eliminato l'attributo esterno da restauri 
