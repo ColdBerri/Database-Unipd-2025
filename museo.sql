@@ -9,10 +9,14 @@ DROP TABLE IF EXISTS Mostre CASCADE;
 DROP TABLE IF EXISTS Mostre_Temporanee CASCADE;
 DROP TABLE IF EXISTS Restauri CASCADE;
 DROP TABLE IF EXISTS Laboratori CASCADE;
-DROP TABLE IF EXISTS Responsabili;
+DROP TABLE IF EXISTS Responsabili CASCADE;
 DROP TABLE IF EXISTS Zone_ CASCADE;
-DROP TABLE IF EXISTS Collaborazioni_Mostre_temporanee;
- 
+DROP TABLE IF EXISTS Collaborazioni_Mostre_temporanee CASCADE;
+
+DROP DOMAIN IF EXISTS prezzo_quadro;
+
+CREATE DOMAIN prezzo_quadro AS VARCHAR(20)
+CHECK (VALUE ~ '^[0-9]+$' OR VALUE = 'inestimabile');
 
 CREATE TABLE IF NOT EXISTS Artisti(
     pseudonimo VARCHAR(64) PRIMARY KEY,
@@ -24,8 +28,17 @@ CREATE TABLE IF NOT EXISTS Artisti(
     data_di_morte VARCHAR(64)
 );
 INSERT INTO Artisti (pseudonimo, nome, cognome, nazionalità, sesso, data_di_nascita, data_di_morte) VALUES
+('Géricault', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'),--dc
+('David', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'), --dc
+('Bosch', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'), --dc
+('Van Eyck', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'),--dc
+('Titian', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'),--dc
+('Rubens', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'),
+('Andrea del Sarto', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'),
+('Parmigianino', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'),
+
 ('Picasso', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'),
-('DaVinci', 'Leonardo', 'da Vinci', 'Italiano', 'Maschio', '1452-04-15', '1519-05-02'),
+('Da Vinci', 'Leonardo', 'da Vinci', 'Italiano', 'Maschio', '1452-04-15', '1519-05-02'),
 ('Frida', 'Frida', 'Kahlo', 'Messicana', 'Femmina', '1907-07-06', '1954-07-13'),
 ('VanGogh', 'Vincent', 'van Gogh', 'Olandese', 'Maschio', '1853-03-30', '1890-07-29'),
 ('Monet', 'Claude', 'Monet', 'Francese', 'Maschio', '1840-11-14', '1926-12-05'),
@@ -60,10 +73,9 @@ INSERT INTO Artisti (pseudonimo, nome, cognome, nazionalità, sesso, data_di_nas
 ('Kapoor', 'Anish', 'Kapoor', 'Britannico', 'Maschio', '1954-03-12', NULL),
 ('Abramović', 'Marina', 'Abramović', 'Serba', 'Femmina', '1946-11-30', NULL),
 ('Turrell', 'James', 'Turrell', 'Americano', 'Maschio', '1943-05-06', NULL),
-('Hirst', 'Damien', 'Hirst', 'Britannico', 'Maschio', '1965-06-07', NULL),
 ('Orozco', 'Gabriel', 'Orozco', 'Messicano', 'Maschio', '1962-04-27', NULL),
 ('Whiteread', 'Rachel', 'Whiteread', 'Britannica', 'Femmina', '1963-04-20', NULL),
-('Gormley', 'Antony', 'Gormley', 'Britannico', 'Maschio', '1950-08-30', NULL);
+('Gormley', 'Antony', 'Gormley', 'Britannico', 'Maschio', '1950-08-30', NULL),
 ('Kosuth', 'Joseph', 'Kosuth', 'Americano', 'Maschio', '1945-01-31', NULL),
 ('Duchamp', 'Marcel', 'Duchamp', 'Francese', 'Maschio', '1887-07-28', '1968-10-02'),
 ('Ono', 'Yoko', 'Ono', 'Giapponese', 'Femmina', '1933-02-18', NULL),
@@ -111,9 +123,25 @@ CREATE TABLE IF NOT EXISTS Zone_ (
     ala VARCHAR(64) NOT NULL,
     piano INT NOT NULL,
     responsabile VARCHAR(16) NOT NULL,
-    FOREIGN KEY (responsabile) REFERENCES Responsabili(codice_fiscale),
+    FOREIGN KEY (responsabile) REFERENCES Responsabili(codice_fiscale)
     --fare un check sul responsabile che sia almeno di livello 3 su 5
 );
+
+CREATE OR REPLACE FUNCTION check_responsabile_level()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF (SELECT livello FROM Responsabili WHERE codice_fiscale = NEW.responsabile) < 3 THEN
+        RAISE EXCEPTION 'Il responsabile deve avere livello >= 3';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trig_responsabile_level
+BEFORE INSERT OR UPDATE ON Zone_
+FOR EACH ROW EXECUTE FUNCTION check_responsabile_level();
+
+
 INSERT INTO Zone_ (nome_zona, ala, piano, responsabile) VALUES
 ('Arte Moderna', 'Est', 1, 'RSP001'),
 ('Arte Rinascimentale', 'Ovest', 2, 'RSP002'),
@@ -132,6 +160,8 @@ CREATE TABLE IF NOT EXISTS Mostre(
 );
 INSERT INTO Mostre (nome_mostra, tema, zona) VALUES
 ('Impressionismo', 'Arte Moderna', 'Arte Moderna'),
+('Arte Moderna', 'Arte Moderna', 'Arte Moderna'),
+('Arte Contemporanea', 'Arte Moderna', 'Arte Moderna'),
 ('Rinascimento Italiano', 'Arte Rinascimentale', 'Arte Rinascimentale'),
 ('Surrealismo', 'Arte Contemporanea', 'Arte Contemporanea'),
 ('Sculture Classiche', 'Sculture', 'Sculture'),
@@ -144,6 +174,7 @@ CREATE TABLE IF NOT EXISTS Mostre_Temporanee(
     nome_mostra VARCHAR(64) PRIMARY KEY,
     data_inizio DATE NOT NULL,
     data_fine DATE NOT NULL,
+	CHECK (data_inizio < data_fine),
     FOREIGN KEY (nome_mostra) REFERENCES Mostre(nome_mostra)
 );
 INSERT INTO Mostre_Temporanee (nome_mostra, data_inizio, data_fine) VALUES
@@ -153,16 +184,35 @@ CREATE TABLE IF NOT EXISTS Opere(
     nome_opera VARCHAR(64) PRIMARY KEY,
     artista VARCHAR(64) NOT NULL,
     anno_creazione INT NOT NULL,
-    valore_di_mercato INT NOT NULL,
+    valore_di_mercato prezzo_quadro NOT NULL,
     corrente_artistica VARCHAR(64) NOT NULL,
     messaggio TEXT NOT NULL,
     mostra VARCHAR(64),
+	CHECK (anno_creazione > 0 AND anno_creazione <= EXTRACT(YEAR FROM CURRENT_DATE)),
     FOREIGN KEY (artista) REFERENCES Artisti(pseudonimo),
     FOREIGN KEY (mostra) REFERENCES MOSTRE 
 );
 INSERT INTO Opere (nome_opera, artista, anno_creazione, valore_di_mercato, corrente_artistica, messaggio, mostra) VALUES
+('David', 'Picasso', 1937, 'inestimabile', 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
+('Venus de Milo', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
+('Pietà', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
+('Apollo Belvedere', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
+('Laocoön and His Sons', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
+('Winged Victory of Samothrace', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
+('Discobolus', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
+('Augustus of Prima Porta', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
+('Hermes and the Infant Dionysus', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
+('The Dying Gaul', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
+('The Boxer at Rest', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
+('The Farnese Hercules', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
+('The Rape of Proserpina', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
+('The Ecstasy of Saint Teresa', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
+('The Gates of Hell', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
+('The Burghers of Calais', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
+('The Age of Bronze', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
+
 ('Guernica', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
-('Monna Lisa', 'DaVinci', 1503, 860000000, 'Rinascimento', 'Ritratto enigmatico', 'Rinascimento Italiano'),
+('Monna Lisa', 'Da Vinci', 1503, 860000000, 'Rinascimento', 'Ritratto enigmatico', 'Rinascimento Italiano'),
 ('La Notte Stellata', 'VanGogh', 1889, 100000000, 'Post-Impressionismo', 'Natura e cielo', 'Arte Moderna'),
 ('Les Nymphéas', 'Monet', 1916, 110000000, 'Impressionismo', 'Acqua e luce', 'Impressionismo'),
 ('Campbell Soup', 'Warhol', 1962, 50000000, 'Pop Art', 'Consumismo', 'Arte Contemporanea'),
@@ -174,12 +224,10 @@ INSERT INTO Opere (nome_opera, artista, anno_creazione, valore_di_mercato, corre
 ('The Scream', 'Munch', 1893, 120000000, 'Espressionismo', 'Angoscia', 'Arte Moderna'),
 ('The Starry Night', 'VanGogh', 1889, 100000000, 'Post-Impressionismo', 'Natura e cielo', 'Arte Moderna'),
 ('The Birth of Venus', 'Botticelli', 1485, 300000000, 'Rinascimento', 'Bellezza', 'Rinascimento Italiano'),
-('The Last Supper', 'DaVinci', 1498, 450000000, 'Rinascimento', 'Religione', 'Rinascimento Italiano'),
+('The Last Supper', 'Da Vinci', 1498, 450000000, 'Rinascimento', 'Religione', 'Rinascimento Italiano'),
 ('The Water Lily Pond', 'Monet', 1899, 110000000, 'Impressionismo', 'Natura', 'Impressionismo'),
 ('The Dance', 'Matisse', 1910, 150000000, 'Fauvismo', 'Movimento', 'Arte Moderna'),
-('The Physical Impossibility of Death', 'Hirst', 1991, 12000000, 'Arte Contemporanea', 'Morte', 'Arte Contemporanea'),
 ('The Son of Man', 'Magritte', 1964, 10000000, 'Surrealismo', 'Mistero', 'Surrealismo'),
-('The Kiss', 'Rodin', 1889, 80000000, 'Scultura', 'Amore', 'Sculture Classiche'),
 ('The Starry Night Over the Rhone', 'VanGogh', 1888, 90000000, 'Post-Impressionismo', 'Natura', 'Arte Moderna'),
 ('The Night Café', 'VanGogh', 1888, 85000000, 'Post-Impressionismo', 'Notte e solitudine', 'Arte Moderna'),
 ('The Card Players', 'Cezanne', 1895, 250000000, 'Post-Impressionismo', 'Vita quotidiana', 'Arte Moderna'),
@@ -199,8 +247,8 @@ INSERT INTO Opere (nome_opera, artista, anno_creazione, valore_di_mercato, corre
 ('The Calling of Saint Matthew', 'Caravaggio', 1600, 140000000, 'Barocco', 'Chiamata', 'Arte Moderna'),
 ('The Entombment of Christ', 'Caravaggio', 1604, 150000000, 'Barocco', 'Morte', 'Arte Moderna'),
 ('The Descent from the Cross', 'Rubens', 1614, 160000000, 'Barocco', 'Sacrificio', 'Arte Moderna'),
-('The Adoration of the Magi', 'Leonardo', 1481, 200000000, 'Rinascimento', 'Adorazione', 'Rinascimento Italiano'),
-('The Annunciation', 'Leonardo', 1475, 180000000, 'Rinascimento', 'Annunciazione', 'Rinascimento Italiano'),
+('The Adoration of the Magi', 'Da Vinci', 1481, 200000000, 'Rinascimento', 'Adorazione', 'Rinascimento Italiano'),
+('The Annunciation', 'Da Vinci', 1475, 180000000, 'Rinascimento', 'Annunciazione', 'Rinascimento Italiano'),
 ('The Madonna of the Goldfinch', 'Raphael', 1506, 170000000, 'Rinascimento', 'Madonna', 'Rinascimento Italiano'),
 ('The Madonna of the Meadow', 'Raphael', 1506, 160000000, 'Rinascimento', 'Madonna', 'Rinascimento Italiano'),
 ('The Madonna of the Pomegranate', 'Botticelli', 1487, 150000000, 'Rinascimento', 'Madonna', 'Rinascimento Italiano'),
@@ -209,18 +257,8 @@ INSERT INTO Opere (nome_opera, artista, anno_creazione, valore_di_mercato, corre
 ('The Madonna of the Chair', 'Raphael', 1514, 120000000, 'Rinascimento', 'Madonna', 'Rinascimento Italiano'),
 ('The Madonna of the Magnificat', 'Botticelli', 1483, 110000000, 'Rinascimento', 'Madonna', 'Rinascimento Italiano'),
 ('The Madonna of the Rosary', 'Caravaggio', 1607, 100000000, 'Barocco', 'Madonna', 'Arte Moderna'),
-('The Madonna of the Yarnwinder', 'Leonardo', 1501, 90000000, 'Rinascimento', 'Madonna', 'Rinascimento Italiano'),
-('The Madonna of the Carnation', 'Leonardo', 1478, 80000000, 'Rinascimento', 'Madonna', 'Rinascimento Italiano'),
-('The Madonna of the Goldfinch', 'Raphael', 1506, 170000000, 'Rinascimento', 'Madonna', 'Rinascimento Italiano'),
-('The Madonna of the Meadow', 'Raphael', 1506, 160000000, 'Rinascimento', 'Madonna', 'Rinascimento Italiano'),
-('The Madonna of the Pomegranate', 'Botticelli', 1487, 150000000, 'Rinascimento', 'Madonna', 'Rinascimento Italiano'),
-('The Madonna of the Harpies', 'Andrea del Sarto', 1517, 140000000, 'Rinascimento', 'Madonna', 'Rinascimento Italiano'),
-('The Madonna of the Long Neck', 'Parmigianino', 1535, 130000000, 'Manierismo', 'Madonna', 'Arte Moderna'),
-('The Madonna of the Chair', 'Raphael', 1514, 120000000, 'Rinascimento', 'Madonna', 'Rinascimento Italiano'),
-('The Madonna of the Magnificat', 'Botticelli', 1483, 110000000, 'Rinascimento', 'Madonna', 'Rinascimento Italiano'),
-('The Madonna of the Rosary', 'Caravaggio', 1607, 100000000, 'Barocco', 'Madonna', 'Arte Moderna'),
-('The Madonna of the Yarnwinder', 'Leonardo', 1501, 90000000, 'Rinascimento', 'Madonna', 'Rinascimento Italiano'),
-('The Madonna of the Carnation', 'Leonardo', 1478, 80000000, 'Rinascimento', 'Madonna', 'Rinascimento Italiano'),
+('The Madonna of the Yarnwinder', 'Da Vinci', 1501, 90000000, 'Rinascimento', 'Madonna', 'Rinascimento Italiano'),
+('The Madonna of the Carnation', 'Da Vinci', 1478, 80000000, 'Rinascimento', 'Madonna', 'Rinascimento Italiano'),
 ('Infinity Mirror Room', 'Kusama', 1965, 5000000, 'Installazione', 'Infinito e riflessione', 'Installazioni Interattive'),
 ('The Weather Project', 'Eliasson', 2003, 10000000, 'Installazione', 'Natura e percezione', 'Installazioni Interattive'),
 ('Sunflower Seeds', 'AiWeiwei', 2010, 7000000, 'Installazione', 'Massa e individualità', 'Installazioni Interattive'),
@@ -230,7 +268,7 @@ INSERT INTO Opere (nome_opera, artista, anno_creazione, valore_di_mercato, corre
 ('For the Love of God', 'Hirst', 2007, 100000000, 'Concettuale', 'Morte e valore', 'Arte Concettuale'),
 ('Empty Shoe Box', 'Orozco', 1993, 500000, 'Concettuale', 'Oggetti e significato', 'Arte Concettuale'),
 ('Ghost', 'Whiteread', 1990, 2000000, 'Installazione', 'Assenza e memoria', 'Installazioni Interattive'),
-('Angel of the North', 'Gormley', 1998, 3000000, 'Installazione', 'Umanità e spazio', 'Installazioni Interattive');
+('Angel of the North', 'Gormley', 1998, 3000000, 'Installazione', 'Umanità e spazio', 'Installazioni Interattive'),
 ('My Bed', 'Hirst', 1998, 2500000, 'Installazione', 'Vita e disordine', 'Installazioni Interattive'),
 ('The Physical Impossibility of Death', 'Hirst', 1991, 12000000, 'Installazione', 'Morte e esistenza', 'Installazioni Interattive'),
 ('Lightning Field', 'Turrell', 1977, 8000000, 'Installazione', 'Luce e natura', 'Installazioni Interattive'),
@@ -286,16 +324,12 @@ INSERT INTO Quadro (nome_quadro, base, dimensione, tecnica) VALUES
 ('The Adoration of the Magi', 'Tela', '246x243 cm', 'Olio'),
 ('The Annunciation', 'Tela', '98x217 cm', 'Olio'),
 ('The Madonna of the Goldfinch', 'Tela', '107x77 cm', 'Olio'),
-('The Madonna of the Meadow', 'Tela', '113x88 cm', 'Olio'),
-('The Madonna of the Pomegranate', 'Tela', '143x143 cm', 'Olio'),
-('The Madonna of the Harpies', 'Tela', '208x178 cm', 'Olio'),
 ('The Madonna of the Long Neck', 'Tela', '216x132 cm', 'Olio'),
 ('The Madonna of the Chair', 'Tela', '71x71 cm', 'Olio'),
 ('The Madonna of the Magnificat', 'Tela', '118x118 cm', 'Olio'),
 ('The Madonna of the Rosary', 'Tela', '364x249 cm', 'Olio'),
 ('The Madonna of the Yarnwinder', 'Tela', '50.2x36.4 cm', 'Olio'),
 ('The Madonna of the Carnation', 'Tela', '62x47.5 cm', 'Olio'),
-('The Madonna of the Goldfinch', 'Tela', '107x77 cm', 'Olio'),
 ('The Madonna of the Meadow', 'Tela', '113x88 cm', 'Olio'),
 ('The Madonna of the Pomegranate', 'Tela', '143x143 cm', 'Olio'),
 ('The Madonna of the Harpies', 'Tela', '208x178 cm', 'Olio');
@@ -340,7 +374,7 @@ CREATE TABLE IF NOT EXISTS Installazione(
 INSERT INTO Installazione (nome_installazione, coinvolgimento_sensoriale, interattività) VALUES
 ('My Bed', 'Visivo e tattile', 'Media'),
 ('The Physical Impossibility of Death', 'Visivo', 'Bassa'),
-('Lightning Field', 'Visivo', 'Alta');
+('Lightning Field', 'Visivo', 'Alta'),
 ('Infinity Mirror Room', 'Visivo', 'Alta'),
 ('The Weather Project', 'Visivo e tattile', 'Media'),
 ('Sunflower Seeds', 'Visivo e tattile', 'Bassa'),
@@ -448,7 +482,3 @@ INSERT INTO Collaborazioni_Mostre_temporanee (nome_mostra, ente_collaborante) VA
 
 --Query 6 : stampare il nome dei laboratori che hanno un livello di attrezzatura e un numero di restauratori almeno quanto scelto da utente
 --          e che siano esterni ai laboratori del museo.  
-
-
-
-
