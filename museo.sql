@@ -36,7 +36,6 @@ INSERT INTO Artisti (pseudonimo, nome, cognome, nazionalità, sesso, data_di_nas
 ('Rubens', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'),
 ('Andrea del Sarto', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'),
 ('Parmigianino', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'),
-
 ('Picasso', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'),
 ('Da Vinci', 'Leonardo', 'da Vinci', 'Italiano', 'Maschio', '1452-04-15', '1519-05-02'),
 ('Frida', 'Frida', 'Kahlo', 'Messicana', 'Femmina', '1907-07-06', '1954-07-13'),
@@ -210,7 +209,6 @@ INSERT INTO Opere (nome_opera, artista, anno_creazione, valore_di_mercato, corre
 ('The Gates of Hell', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
 ('The Burghers of Calais', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
 ('The Age of Bronze', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
-
 ('Guernica', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
 ('Monna Lisa', 'Da Vinci', 1503, 860000000, 'Rinascimento', 'Ritratto enigmatico', 'Rinascimento Italiano'),
 ('La Notte Stellata', 'VanGogh', 1889, 100000000, 'Post-Impressionismo', 'Natura e cielo', 'Arte Moderna'),
@@ -435,7 +433,7 @@ INSERT INTO Laboratori (nome_laboratorio, ID_restauro, numero_di_restauratori, l
 ('Lab1', 'RES001', 5, 'Alto', 'Dipinti'),
 ('Lab2', 'RES002', 7, 'Medio', 'Sculture'),
 ('Lab3', 'RES003', 4, 'Basso', 'Installazioni'),
-('Lab4', 'RES004', 6, 'Alto', 'Arte Concettuale'),
+('Lab4', 'RES004', 6, 'Alto', 'Legno'),
 ('Lab5', 'RES005', 3, 'Medio', 'Quadri'),
 ('Lab6', 'RES006', 8, 'Alto', 'Sculture'),
 ('Lab7', 'RES007', 5, 'Medio', 'Dipinti'),
@@ -464,21 +462,19 @@ INSERT INTO Collaborazioni_Mostre_temporanee (nome_mostra, ente_collaborante) VA
 
 --QUERY 
 
+--Query 1 : stamapre i nomi delle mostre con la scultura o il quadro (sceglie utente se scultura o quadro) più grande (attributo dimensioni) e l'ente che lo ha prestato se c'è
 
---Query 1 : stampare i nomi degli artisti che hanno più opere di un numero scelto dall'utente tra tutte le mostre 
-
-
---Query 2 : stampare la mostra che, sommando i valori del tipo di opera scelto da utente (quadri/sculture/installazioni/opere concettuali), ha il maggior valore complessivo
-
-
---Query 3 : stampare il nome dell'ente che ha collaborato più volte per i restauri e l'dentificativo del responsabile che ha seguito più restauri con quell'ente
+--Query 2 : stampare l'identificativo del responsabile che ha seguito più restauri, fatti in un laboratorio esterno,
+--          con un livello di degradazione scelto da utente.
 
 
---Query 4 : stampare l'ala del museo con più mostre che hanno almeno un numero di opere minimo scelto da utente
+--Query 3 : stampare l'ente, o gli enti, pubblico o privato in base alla scelta dell'utente, che ha/hanno collaborato di 
+--          più con il museo sia per mostre che per restauri
 
 
---Query 5 : stampare la lista di tutte le mostre temporanee che hanno opere di almeno tre tipi diversi e che abbiano un tema scelto dall'utente
+--Query 4 : Stampare il nome dell'artista che ha più opere nelle Mostre temporanee iniziate dopo una data scelta da utente
 
 
---Query 6 : stampare il nome dei laboratori che hanno un livello di attrezzatura e un numero di restauratori almeno quanto scelto da utente
---          e che siano esterni ai laboratori del museo.  
+--Query 5 : stampare l'ala del museo con più mostre che hanno almeno un numero di opere minimo scelto da utente
+
+
