@@ -412,7 +412,7 @@ CREATE TABLE IF NOT EXISTS Restauri (
     FOREIGN KEY (opera_da_restaurare) REFERENCES Opere(nome_opera)
 
 );
---aggiungere opere in restauro in tutte le tabelle
+
 INSERT INTO Restauri (ID_restauro, opera_da_restaurare, responsabile, esterno, ente_collaborante, livello_degradazione) VALUES
 ('RES001', 'Guernica', 'RSP001', FALSE, NULL, 3),
 ('RES002', 'Monna Lisa', 'RSP002', TRUE, 'Tate Modern', 5),
@@ -526,10 +526,3 @@ SELECT nome_zona, mostra, opm
 FROM Zone_ Z, opere_per_mostra OM, Mostre M
 WHERE M.zona = Z.nome_zona AND OM.mostra = M.nome_mostra AND Z.ala = 'Est'--scelta dell'utente
 
-
--- AGGIUSTAMENTI : 
---          1) AGGIUNGERE RESPONSABILI (CHI È RESPONSABILE DEI RESTAURI NON LO È DELLE MOSTRE)
---          3) AGGIUNGERE MOSTRE TEMPORANEE UNA NON BASTA, COSÌ POSSIAMO FARE DELLE ALTRE QUERY
---          4) AGGIUNGERE INDICI
---          5) AGGIUNGERE DELLE OPERE MA DEGLI STESSI ARTISTI GIÀ PRESENTI SENZA AGGIUNGERENE DI NUOVI
---          6) AGGIUNGERE DI CONSEGUENZA QUALCHE ENTE E INTEGRARE LE COLLABORAZIONI PER LE MOSTRE TEMPORANEE
