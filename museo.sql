@@ -403,23 +403,27 @@ INSERT INTO Concettuale (nome_opera_concettuale, medium_utilizzato, partecipazio
 
 CREATE TABLE IF NOT EXISTS Restauri (
     ID_restauro VARCHAR(64) PRIMARY KEY,
-    estreno BOOLEAN NOT NULL,
+    opera_da_restaurare VARCHAR(64) NOT NULL,
+    responsabile VARCHAR(16) NOT NULL,
+    esterno BOOLEAN NOT NULL,
     ente_collaborante VARCHAR(64),
     livello_degradazione INT NOT NULL,
-    FOREIGN KEY (ente_collaborante) REFERENCES Collaborazioni(ente)
-);
-INSERT INTO Restauri (ID_restauro, estreno, ente_collaborante, livello_degradazione) VALUES
-('RES001', FALSE, 'Louvre', 3),
-('RES002', TRUE, 'Tate Modern', 5),
-('RES003', FALSE, 'Getty Museum', 2),
-('RES004', TRUE, 'MoMA', 4),
-('RES005', FALSE, 'Guggenheim', 3),
-('RES006', TRUE, 'British Museum', 4),
-('RES007', FALSE, 'Fondazione Prada', 2),
-('RES008', TRUE, 'UNESCO', 5),
-('RES009', FALSE, 'Google Arts', 1),
-('RES010', TRUE, 'Fondazione Beyeler', 4);
+    FOREIGN KEY (ente_collaborante) REFERENCES Collaborazioni(ente),
+    FOREIGN KEY (opera_da_restaurare) REFERENCES Opere(nome_opera)
 
+);
+--aggiungere opere in restauro in tutte le tabelle
+INSERT INTO Restauri (ID_restauro, opera_da_restaurare, responsabile, esterno, ente_collaborante, livello_degradazione) VALUES
+('RES001', 'Guernica', 'RSP001', FALSE, NULL, 3),
+('RES002', 'Monna Lisa', 'RSP002', TRUE, 'Tate Modern', 5),
+('RES003', 'La Notte Stellata', 'RSP003', FALSE, NULL, 2),
+('RES004', 'Les Nymphéas', 'RSP004', TRUE, 'MoMA', 4),
+('RES005', 'Campbell Soup', 'RSP005', FALSE, NULL, 3),
+('RES006', 'The Persistence of Memory', 'RSP006', TRUE, 'British Museum', 4),
+('RES007', 'Balloon Dog', 'RSP007', FALSE, NULL, 2),
+('RES008', 'The Kiss', 'RSP008', TRUE, 'UNESCO', 5),
+('RES009', 'The Thinker', 'RSP009', FALSE, NULL, 1),
+('RES010', 'Girl with Balloon', 'RSP010', TRUE, 'Fondazione Beyeler', 4);
 
 CREATE TABLE IF NOT EXISTS Laboratori (
     nome_laboratorio VARCHAR(64) PRIMARY KEY,
@@ -443,12 +447,12 @@ INSERT INTO Laboratori (nome_laboratorio, ID_restauro, numero_di_restauratori, l
 
 CREATE TABLE IF NOT EXISTS Collaborazioni_Mostre_temporanee (
     nome_mostra VARCHAR(64),
-    ente_collaborante VARCHAR(64),
-    PRIMARY KEY(nome_mostra, ente_collaborante),
+    ente_di_collaborazione VARCHAR(64),
+    PRIMARY KEY(nome_mostra, ente_di_collaborazione),
     FOREIGN KEY (nome_mostra) REFERENCES Mostre_Temporanee(nome_mostra),
-    FOREIGN KEY (ente_collaborante) REFERENCES Collaborazioni(ente)
+    FOREIGN KEY (ente_di_collaborazione) REFERENCES Collaborazioni(ente)
 );
-INSERT INTO Collaborazioni_Mostre_temporanee (nome_mostra, ente_collaborante) VALUES
+INSERT INTO Collaborazioni_Mostre_temporanee (nome_mostra, ente_di_collaborazione) VALUES
 ('Mostra Temporanea 2023', 'Louvre'),
 ('Mostra Temporanea 2023', 'Tate Modern'),
 ('Mostra Temporanea 2023', 'Google Arts'),
@@ -462,19 +466,70 @@ INSERT INTO Collaborazioni_Mostre_temporanee (nome_mostra, ente_collaborante) VA
 
 --QUERY 
 
---Query 1 : stamapre i nomi delle mostre con la scultura o il quadro (sceglie utente se scultura o quadro) più grande (attributo dimensioni) e l'ente che lo ha prestato se c'è
+--Query 1 : scelta una mostra da utente stampare l'opera (o le opere a parità di valore) più costosa della mostra e le sue caratteristiche come opera
+
+
 
 --Query 2 : stampare l'identificativo del responsabile che ha seguito più restauri, fatti in un laboratorio esterno,
 --          con un livello di degradazione scelto da utente.
+WITH restauri_per_responsabile AS (     
+    SELECT responsabile, COUNT(*) AS Nrestauri
+    FROM Restauri
+    WHERE livello_degradazione >= 2 --scelta da utente tipo NUM
+    GROUP BY responsabile
+)
+
+SELECT responsabile, Nrestauri
+FROM restauri_per_responsabile
+WHERE Nrestauri = (SELECT MAX(Nrestauri)
+                   FROM restauri_per_responsabile)
 
 
 --Query 3 : stampare l'ente, o gli enti, pubblico o privato in base alla scelta dell'utente, che ha/hanno collaborato di 
---          più con il museo sia per mostre che per restauri
+--          più con il museo sia per mostre che per restauri. inlotre stampare il numero di collaborazioni totali.
+WITH collaborazioni_mostre AS (
+    SELECT ente_di_collaborazione, COUNT(*) AS com
+    FROM Collaborazioni_Mostre_temporanee CM, Collaborazioni C
+    WHERE C.ente = CM.ente_di_collaborazione AND C.Pubblico = TRUE --scelta dell'utente
+    GROUP BY ente_di_collaborazione
+),
+    collaborazioni_restauri AS(
+        SELECT ente_collaborante, COUNT(*) AS cor
+        FROM Restauri R, Collaborazioni C
+        WHERE C.Pubblico = TRUE AND R.ente_collaborante = C.ente  --stessa var di prima per scelta da utente
+        GROUP BY ente_collaborante
+    ),
+
+    collab_totali AS(
+        SELECT ente_collaborante, SUM(com + cor) AS totc
+        FROM collaborazioni_mostre CM, collaborazioni_restauri CR
+        WHERE CM.ente_di_collaborazione = CR.ente_collaborante
+		GROUP BY ente_collaborante
+    )
+
+SELECT ente_collaborante, totc
+FROM collab_totali
+WHERE totc = (SELECT MAX(totc)
+              FROM collab_totali)
+
+--Query 4 : 
 
 
---Query 4 : Stampare il nome dell'artista che ha più opere nelle Mostre temporanee iniziate dopo una data scelta da utente
+--Query 5 : scelta un'ala del museo da utente stampare il nome delle zone, della msotra in quella zona e di opere per mostra esposte in quell'ala
+WITH opere_per_mostra AS (
+    SELECT mostra, COUNT(*) AS opm
+    FROM Opere
+    GROUP BY mostra
+)
+
+SELECT nome_zona, mostra, opm
+FROM Zone_ Z, opere_per_mostra OM, Mostre M
+WHERE M.zona = Z.nome_zona AND OM.mostra = M.nome_mostra AND Z.ala = 'Est'--scelta dell'utente
 
 
---Query 5 : stampare l'ala del museo con più mostre che hanno almeno un numero di opere minimo scelto da utente
-
-
+-- AGGIUSTAMENTI : 
+--          1) AGGIUNGERE RESPONSABILI (CHI È RESPONSABILE DEI RESTAURI NON LO È DELLE MOSTRE)
+--          3) AGGIUNGERE MOSTRE TEMPORANEE UNA NON BASTA, COSÌ POSSIAMO FARE DELLE ALTRE QUERY
+--          4) AGGIUNGERE INDICI
+--          5) AGGIUNGERE DELLE OPERE MA DEGLI STESSI ARTISTI GIÀ PRESENTI SENZA AGGIUNGERENE DI NUOVI
+--          6) AGGIUNGERE DI CONSEGUENZA QUALCHE ENTE E INTEGRARE LE COLLABORAZIONI PER LE MOSTRE TEMPORANEE
