@@ -466,9 +466,54 @@ INSERT INTO Collaborazioni_Mostre_temporanee (nome_mostra, ente_di_collaborazion
 
 --QUERY 
 
---Query 1 : scelta una mostra da utente stampare l'opera (o le opere a parità di valore) più costosa della mostra e le sue caratteristiche come opera
+--Query 1 : scelta una mostra da utente stampare le opere presenti nella mostra e le loro caratteristiche singole
+WITH opera_costosa AS (
+    SELECT DISTINCT O1.nome_opera, O1.valore_di_mercato, O1.artista
+    FROM Opere O1, Opere O2
+	WHERE O1.nome_opera != O2.nome_opera AND O1.mostra = 'Installazioni Interattive'  -- Scelta dell'utente
+)
 
+SELECT DISTINCT ON (OC.nome_opera) 
+    OC.nome_opera, 
+    OC.valore_di_mercato, 
+    OC.artista, 
+    'Quadro' AS tipo_opera,
+    Q.base || ', ' || Q.tecnica || ', ' || Q.dimensione AS dettagli_opera
+FROM opera_costosa OC
+JOIN Quadro Q ON OC.nome_opera = Q.nome_quadro
 
+UNION ALL
+
+SELECT DISTINCT ON (OC.nome_opera)
+    OC.nome_opera, 
+    OC.valore_di_mercato, 
+    OC.artista, 
+    'Scultura' AS tipo_opera,
+    S.dimensioni || ', ' || S.materiale || ', ' || S.tecnica_scultorea AS dettagli_opera
+FROM opera_costosa OC
+JOIN Scultura S ON OC.nome_opera = S.nome_scultura
+
+UNION ALL
+
+SELECT DISTINCT ON (OC.nome_opera)
+    OC.nome_opera, 
+    OC.valore_di_mercato, 
+    OC.artista, 
+    'Installazione' AS tipo_opera,
+    I.coinvolgimento_sensoriale || ', ' || I.interattività AS dettagli_opera
+FROM opera_costosa OC
+JOIN Installazione I ON OC.nome_opera = I.nome_installazione
+
+UNION ALL
+
+SELECT DISTINCT ON (OC.nome_opera)
+    OC.nome_opera, 
+    OC.valore_di_mercato, 
+    OC.artista, 
+    'Concettuale' AS tipo_opera,
+    C.medium_utilizzato || ', ' || C.partecipazione_pubblico AS dettagli_opera
+FROM opera_costosa OC
+JOIN Concettuale C ON OC.nome_opera = C.nome_opera_concettuale;
 
 --Query 2 : stampare l'identificativo del responsabile che ha seguito più restauri, fatti in un laboratorio esterno,
 --          con un livello di degradazione scelto da utente.
