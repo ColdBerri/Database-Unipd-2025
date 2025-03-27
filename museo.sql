@@ -557,7 +557,15 @@ FROM collab_totali
 WHERE totc = (SELECT MAX(totc)
               FROM collab_totali)
 
---Query 4 : 
+--Query 4 : trova le mostre che ospitano opere di almeno 2 artisti diversi e mostra il numero di artisti coinvolti per ogni mostra
+
+SELECT o.mostra, COUNT(DISTINCT a.pseudonimo) AS numero_artisti_coinvolti
+FROM Opere o
+JOIN Artisti a ON o.artista = a.pseudonimo
+WHERE o.mostra IS NOT NULL
+GROUP BY o.mostra
+HAVING COUNT(DISTINCT a.pseudonimo) >= 2
+ORDER BY numero_artisti_coinvolti DESC;
 
 
 --Query 5 : scelta un'ala del museo da utente stampare il nome delle zone, della msotra in quella zona e di opere per mostra esposte in quell'ala
