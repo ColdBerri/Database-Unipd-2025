@@ -17,7 +17,6 @@ void stampa(char **st, int numC) {
 }
 
 void listaQuer() {
-
 }
 
 void stampaElenco() {
@@ -103,4 +102,13 @@ int check(PGresult *P, PGconn *c) {
     return 1;
   }
   return 0;
+}
+
+void query1(PGconn *c) {
+  const char *query = "SELECT * FROM Artisti; ";
+  PGresult *res = PQexec(c, query);
+  if (check(res,c) == 1)
+    return;
+  printQuery(res);
+  PQclear(res);
 }

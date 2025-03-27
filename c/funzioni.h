@@ -12,6 +12,8 @@ void printQuery(PGresult *);
 int checkConnesione(PGconn *);
 int check(PGresult *, PGconn *);
 
+void query1(PGconn *);
+
 void disable_echo_mode(struct termios*);
 
 void enable_echo_mode(const struct termios*);

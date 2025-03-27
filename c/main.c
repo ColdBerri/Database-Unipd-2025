@@ -1,7 +1,7 @@
 #include "funzioni.h"
 #define PG_HOST "localhost"
 #define PG_USER "postgres"
-#define PG_DB "project"
+#define PG_DB "n"
 #define PG_PASS "aa"
 #define PG_PORT 5432
 
@@ -11,7 +11,7 @@ int main() {
   char x = '0';
   char input[10];
 
-  void (*query[])(PGconn *) = {};
+  void (*query[])(PGconn *) = {query1};
 
   char y = 0;
 
