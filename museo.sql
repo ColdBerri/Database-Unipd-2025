@@ -15,6 +15,15 @@ DROP TABLE IF EXISTS Collaborazioni_Mostre_temporanee CASCADE;
 
 DROP DOMAIN IF EXISTS prezzo_quadro;
 
+CREATE INDEX idx_opere_mostra_nome ON Opere USING btree(mostra, nome_opera);
+CREATE INDEX idx_quadro_nome ON Quadro USING btree(nome_quadro);
+CREATE INDEX idx_scultura_nome ON Scultura USING btree(nome_scultura);
+CREATE INDEX idx_installazione_nome ON Installazione USING btree(nome_installazione);
+CREATE INDEX idx_concettuale_nome ON Concettuale USING btree(nome_opera_concettuale);
+
+CREATE INDEX idx_artisti_pseudonimo ON Artisti USING hash(pseudonimo);
+
+
 CREATE DOMAIN prezzo_quadro AS VARCHAR(20)
 CHECK (VALUE ~ '^[0-9]+$' OR VALUE = 'inestimabile');
 
@@ -166,7 +175,7 @@ INSERT INTO Mostre (nome_mostra, tema, zona) VALUES
 ('Sculture Classiche', 'Sculture', 'Sculture'),
 ('Installazioni Interattive', 'Installazioni', 'Installazioni'),
 ('Arte Concettuale', 'Arte Concettuale', 'Arte Concettuale'),
-
+('Mostra Temporanea 2023', 'Arte varia', 'Mostre Temporanee');
 
 CREATE TABLE IF NOT EXISTS Mostre_Temporanee(
     nome_mostra VARCHAR(64) PRIMARY KEY,
@@ -462,6 +471,13 @@ INSERT INTO Collaborazioni_Mostre_temporanee (nome_mostra, ente_di_collaborazion
 ('Mostra Temporanea 2023', 'Guggenheim'),
 ('Mostra Temporanea 2023', 'British Museum'),
 ('Mostra Temporanea 2023', 'Fondazione Beyeler');
+
+--INDICI
+CREATE INDEX idx_collaborazioni_pubblico_ente ON Collaborazioni USING btree(Pubblico, ente); --per query 3
+
+CREATE INDEX idx_artisti_pseudonimo ON Artisti USING hash(pseudonimo); -- per query 4
+
+
 
 --QUERY 
 
