@@ -473,7 +473,6 @@ INSERT INTO Collaborazioni_Mostre_temporanee (nome_mostra, ente_di_collaborazion
 ('Mostra Temporanea 2023', 'Fondazione Beyeler');
 
 --INDICI
-CREATE INDEX idx_opere_mostra_nome ON Opere USING btree(mostra, nome_opera);
 CREATE INDEX idx_quadro_nome ON Quadro USING btree(nome_quadro);
 CREATE INDEX idx_scultura_nome ON Scultura USING btree(nome_scultura);
 CREATE INDEX idx_installazione_nome ON Installazione USING btree(nome_installazione);
