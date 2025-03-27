@@ -166,7 +166,6 @@ INSERT INTO Mostre (nome_mostra, tema, zona) VALUES
 ('Sculture Classiche', 'Sculture', 'Sculture'),
 ('Installazioni Interattive', 'Installazioni', 'Installazioni'),
 ('Arte Concettuale', 'Arte Concettuale', 'Arte Concettuale'),
-('Mostra Temporanea 2023', 'Varie', 'Mostre Temporanee');
 
 
 CREATE TABLE IF NOT EXISTS Mostre_Temporanee(
