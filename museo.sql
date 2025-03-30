@@ -15,15 +15,6 @@ DROP TABLE IF EXISTS Collaborazioni_Mostre_temporanee CASCADE;
 
 DROP DOMAIN IF EXISTS prezzo_quadro;
 
-CREATE INDEX idx_opere_mostra_nome ON Opere USING btree(mostra, nome_opera);
-CREATE INDEX idx_quadro_nome ON Quadro USING btree(nome_quadro);
-CREATE INDEX idx_scultura_nome ON Scultura USING btree(nome_scultura);
-CREATE INDEX idx_installazione_nome ON Installazione USING btree(nome_installazione);
-CREATE INDEX idx_concettuale_nome ON Concettuale USING btree(nome_opera_concettuale);
-
-CREATE INDEX idx_artisti_pseudonimo ON Artisti USING hash(pseudonimo);
-
-
 CREATE DOMAIN prezzo_quadro AS VARCHAR(20)
 CHECK (VALUE ~ '^[0-9]+$' OR VALUE = 'inestimabile');
 
@@ -37,14 +28,14 @@ CREATE TABLE IF NOT EXISTS Artisti(
     data_di_morte VARCHAR(64)
 );
 INSERT INTO Artisti (pseudonimo, nome, cognome, nazionalità, sesso, data_di_nascita, data_di_morte) VALUES
-('Géricault', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'),--dc
-('David', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'), --dc
-('Bosch', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'), --dc
-('Van Eyck', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'),--dc
-('Titian', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'),--dc
-('Rubens', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'),
-('Andrea del Sarto', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'),
-('Parmigianino', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'),
+('Géricault', 'Théodore', 'Géricault', 'Francese', 'Maschio', '1791-09-26', '1824-01-26'),
+('David', 'Jacques-Louis', 'David', 'Francese', 'Maschio', '1748-08-30', '1825-12-29'),
+('Bosch', 'Hieronymus', 'Bosch', 'Olandese', 'Maschio', '1450-01-01', '1516-08-09'),
+('Van Eyck', 'Jan', 'Van Eyck', 'Fiammingo', 'Maschio', '1390-03-24', '1441-07-09'),
+('Titian', 'Tiziano', 'Vecellio', 'Italiano', 'Maschio', '1488-03-27', '1576-08-27'),
+('Rubens', 'Peter Paul', 'Rubens', 'Fiammingo', 'Maschio', '1577-06-28', '1640-05-30'),
+('Andrea del Sarto', 'Andrea', 'della Robbia', 'Italiano', 'Maschio', '1486-07-16', '1531-09-29'),
+('Parmigianino', 'Francesco', 'Mazzola', 'Italiano', 'Maschio', '1503-01-11', '1540-08-24'),
 ('Picasso', 'Pablo', 'Picasso', 'Spagnolo', 'Maschio', '1881-10-25', '1973-04-08'),
 ('Da Vinci', 'Leonardo', 'da Vinci', 'Italiano', 'Maschio', '1452-04-15', '1519-05-02'),
 ('Frida', 'Frida', 'Kahlo', 'Messicana', 'Femmina', '1907-07-06', '1954-07-13'),
@@ -166,22 +157,25 @@ CREATE TABLE IF NOT EXISTS Mostre(
     zona VARCHAR(64) NOT NULL,
     FOREIGN KEY (zona) REFERENCES Zone_(nome_zona)
 );
+
 INSERT INTO Mostre (nome_mostra, tema, zona) VALUES
-('Impressionismo', 'Arte Moderna', 'Arte Moderna'),
-('Arte Moderna', 'Arte Moderna', 'Arte Moderna'),
-('Arte Contemporanea', 'Arte Moderna', 'Arte Moderna'),
+('Impressionismo', 'Stile Impressionista', 'Arte Moderna'),
+('Arte Moderna', 'Avanguardia', 'Arte Moderna'),
+('Arte Contemporanea', 'Postmodernismo', 'Arte Moderna'),
 ('Rinascimento Italiano', 'Arte Rinascimentale', 'Arte Rinascimentale'),
-('Surrealismo', 'Arte Contemporanea', 'Arte Contemporanea'),
-('Sculture Classiche', 'Sculture', 'Sculture'),
-('Installazioni Interattive', 'Installazioni', 'Installazioni'),
-('Arte Concettuale', 'Arte Concettuale', 'Arte Concettuale'),
-('Mostra Temporanea 2023', 'Arte varia', 'Mostre Temporanee');
+('Surrealismo', 'Movimento Surrealista', 'Arte Contemporanea'),
+('Sculture Classiche', 'Arte Greca e Romana', 'Sculture'),
+('Installazioni Interattive', 'Tecnologia e Arte', 'Installazioni'),
+('Arte Concettuale', 'Minimalismo e Concettualismo', 'Arte Concettuale'),
+('Mostra Temporanea 2023','Tecnologia e Arte','Installazioni');
+
+
 
 CREATE TABLE IF NOT EXISTS Mostre_Temporanee(
     nome_mostra VARCHAR(64) PRIMARY KEY,
     data_inizio DATE NOT NULL,
     data_fine DATE NOT NULL,
-	CHECK (data_inizio < data_fine),
+    CHECK (data_inizio < data_fine),
     FOREIGN KEY (nome_mostra) REFERENCES Mostre(nome_mostra)
 );
 INSERT INTO Mostre_Temporanee (nome_mostra, data_inizio, data_fine) VALUES
@@ -195,12 +189,20 @@ CREATE TABLE IF NOT EXISTS Opere(
     corrente_artistica VARCHAR(64) NOT NULL,
     messaggio TEXT NOT NULL,
     mostra VARCHAR(64),
-	CHECK (anno_creazione > 0 AND anno_creazione <= EXTRACT(YEAR FROM CURRENT_DATE)),
+    CHECK (anno_creazione > 0 AND anno_creazione <= EXTRACT(YEAR FROM CURRENT_DATE)),
     FOREIGN KEY (artista) REFERENCES Artisti(pseudonimo),
     FOREIGN KEY (mostra) REFERENCES MOSTRE 
 );
 INSERT INTO Opere (nome_opera, artista, anno_creazione, valore_di_mercato, corrente_artistica, messaggio, mostra) VALUES
 ('David', 'Picasso', 1937, 'inestimabile', 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
+('Guernica', 'Picasso', 1937, 'inestimabile', 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
+('Monna Lisa', 'Da Vinci', 1503, 'inestimabile', 'Rinascimento', 'Ritratto enigmatico', 'Rinascimento Italiano'),
+('The Last Supper', 'Da Vinci', 1498, 'inestimabile', 'Rinascimento', 'Religione', 'Rinascimento Italiano'),
+('The Creation of Adam', 'Michelangelo', 1512, 'inestimabile', 'Rinascimento', 'Creazione', 'Rinascimento Italiano'),
+('The School of Athens', 'Raphael', 1511, 'inestimabile', 'Rinascimento', 'Filosofia', 'Rinascimento Italiano'),
+('The Birth of Venus', 'Botticelli', 1485, 'inestimabile', 'Rinascimento', 'Bellezza', 'Rinascimento Italiano'),
+('The Garden of Earthly Delights', 'Bosch', 1505, 'inestimabile', 'Rinascimento', 'Paradiso e inferno', 'Rinascimento Italiano'),
+('The Starry Night', 'VanGogh', 1889, 'inestimabile', 'Post-Impressionismo', 'Natura e cielo', 'Arte Moderna'),
 ('Venus de Milo', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
 ('Pietà', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
 ('Apollo Belvedere', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
@@ -217,8 +219,6 @@ INSERT INTO Opere (nome_opera, artista, anno_creazione, valore_di_mercato, corre
 ('The Gates of Hell', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
 ('The Burghers of Calais', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
 ('The Age of Bronze', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
-('Guernica', 'Picasso', 1937, 200000000, 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
-('Monna Lisa', 'Da Vinci', 1503, 860000000, 'Rinascimento', 'Ritratto enigmatico', 'Rinascimento Italiano'),
 ('La Notte Stellata', 'VanGogh', 1889, 100000000, 'Post-Impressionismo', 'Natura e cielo', 'Arte Moderna'),
 ('Les Nymphéas', 'Monet', 1916, 110000000, 'Impressionismo', 'Acqua e luce', 'Impressionismo'),
 ('Campbell Soup', 'Warhol', 1962, 50000000, 'Pop Art', 'Consumismo', 'Arte Contemporanea'),
@@ -228,9 +228,6 @@ INSERT INTO Opere (nome_opera, artista, anno_creazione, valore_di_mercato, corre
 ('The Thinker', 'Rodin', 1902, 100000000, 'Scultura', 'Riflessione', 'Sculture Classiche'),
 ('Girl with Balloon', 'Banksy', 2002, 1200000, 'Street Art', 'Speranza', 'Arte Contemporanea'),
 ('The Scream', 'Munch', 1893, 120000000, 'Espressionismo', 'Angoscia', 'Arte Moderna'),
-('The Starry Night', 'VanGogh', 1889, 100000000, 'Post-Impressionismo', 'Natura e cielo', 'Arte Moderna'),
-('The Birth of Venus', 'Botticelli', 1485, 300000000, 'Rinascimento', 'Bellezza', 'Rinascimento Italiano'),
-('The Last Supper', 'Da Vinci', 1498, 450000000, 'Rinascimento', 'Religione', 'Rinascimento Italiano'),
 ('The Water Lily Pond', 'Monet', 1899, 110000000, 'Impressionismo', 'Natura', 'Impressionismo'),
 ('The Dance', 'Matisse', 1910, 150000000, 'Fauvismo', 'Movimento', 'Arte Moderna'),
 ('The Son of Man', 'Magritte', 1964, 10000000, 'Surrealismo', 'Mistero', 'Surrealismo'),
@@ -242,12 +239,8 @@ INSERT INTO Opere (nome_opera, artista, anno_creazione, valore_di_mercato, corre
 ('The Raft of the Medusa', 'Géricault', 1819, 150000000, 'Romanticismo', 'Sopravvivenza', 'Arte Moderna'),
 ('The Death of Marat', 'David', 1793, 130000000, 'Neoclassicismo', 'Rivoluzione', 'Arte Moderna'),
 ('The Third of May 1808', 'Goya', 1814, 140000000, 'Romanticismo', 'Resistenza', 'Arte Moderna'),
-('The Garden of Earthly Delights', 'Bosch', 1505, 200000000, 'Rinascimento', 'Paradiso e inferno', 'Rinascimento Italiano'),
 ('The Arnolfini Portrait', 'Van Eyck', 1434, 180000000, 'Rinascimento', 'Matrimonio', 'Rinascimento Italiano'),
-('The School of Athens', 'Raphael', 1511, 300000000, 'Rinascimento', 'Filosofia', 'Rinascimento Italiano'),
-('The Creation of Adam', 'Michelangelo', 1512, 400000000, 'Rinascimento', 'Creazione', 'Rinascimento Italiano'),
 ('The Sistine Madonna', 'Raphael', 1513, 350000000, 'Rinascimento', 'Devozione', 'Rinascimento Italiano'),
-('The Birth of John the Baptist', 'Caravaggio', 1604, 120000000, 'Barocco', 'Nascita', 'Arte Moderna'),
 ('The Assumption of the Virgin', 'Titian', 1518, 180000000, 'Rinascimento', 'Ascensione', 'Rinascimento Italiano'),
 ('The Conversion of Saint Paul', 'Caravaggio', 1601, 130000000, 'Barocco', 'Conversione', 'Arte Moderna'),
 ('The Calling of Saint Matthew', 'Caravaggio', 1600, 140000000, 'Barocco', 'Chiamata', 'Arte Moderna'),
@@ -266,7 +259,7 @@ INSERT INTO Opere (nome_opera, artista, anno_creazione, valore_di_mercato, corre
 ('The Madonna of the Yarnwinder', 'Da Vinci', 1501, 90000000, 'Rinascimento', 'Madonna', 'Rinascimento Italiano'),
 ('The Madonna of the Carnation', 'Da Vinci', 1478, 80000000, 'Rinascimento', 'Madonna', 'Rinascimento Italiano'),
 ('Infinity Mirror Room', 'Kusama', 1965, 5000000, 'Installazione', 'Infinito e riflessione', 'Installazioni Interattive'),
-('The Weather Project', 'Eliasson', 2003, 10000000, 'Installazione', 'Natura e percezione', 'Installazioni Interattive'),
+('The Weather Project', 'Eliasson', 2003, 1000000, 'Installazione', 'Natura e percezione', 'Installazioni Interattive'),
 ('Sunflower Seeds', 'AiWeiwei', 2010, 7000000, 'Installazione', 'Massa e individualità', 'Installazioni Interattive'),
 ('Cloud Gate', 'Kapoor', 2006, 23000000, 'Installazione', 'Riflessione e spazio', 'Installazioni Interattive'),
 ('The Artist is Present', 'Abramović', 2010, 5000000, 'Concettuale', 'Presenza e connessione', 'Arte Concettuale'),
@@ -321,7 +314,6 @@ INSERT INTO Quadro (nome_quadro, base, dimensione, tecnica) VALUES
 ('The School of Athens', 'Muro', '500x770 cm', 'Affresco'),
 ('The Creation of Adam', 'Muro', '280x570 cm', 'Affresco'),
 ('The Sistine Madonna', 'Tela', '265x196 cm', 'Olio'),
-('The Birth of John the Baptist', 'Tela', '152x198 cm', 'Olio'),
 ('The Assumption of the Virgin', 'Tela', '690x360 cm', 'Olio'),
 ('The Conversion of Saint Paul', 'Tela', '237x189 cm', 'Olio'),
 ('The Calling of Saint Matthew', 'Tela', '322x340 cm', 'Olio'),
@@ -472,11 +464,6 @@ INSERT INTO Collaborazioni_Mostre_temporanee (nome_mostra, ente_di_collaborazion
 ('Mostra Temporanea 2023', 'British Museum'),
 ('Mostra Temporanea 2023', 'Fondazione Beyeler');
 
---INDICI
-CREATE INDEX idx_quadro_nome ON Quadro USING btree(nome_quadro);
-CREATE INDEX idx_scultura_nome ON Scultura USING btree(nome_scultura);
-CREATE INDEX idx_installazione_nome ON Installazione USING btree(nome_installazione);
-CREATE INDEX idx_concettuale_nome ON Concettuale USING btree(nome_opera_concettuale);
 
 --QUERY 
 
@@ -484,7 +471,7 @@ CREATE INDEX idx_concettuale_nome ON Concettuale USING btree(nome_opera_concettu
 WITH opera_costosa AS (
     SELECT DISTINCT O1.nome_opera, O1.valore_di_mercato, O1.artista
     FROM Opere O1, Opere O2
-	WHERE O1.nome_opera != O2.nome_opera AND O1.mostra = 'Installazioni Interattive'  -- Scelta dell'utente
+    WHERE O1.nome_opera != O2.nome_opera AND O1.mostra = 'Installazioni Interattive'  -- Scelta dell'utente
 )
 
 SELECT DISTINCT ON (OC.nome_opera) 
@@ -563,7 +550,7 @@ WITH collaborazioni_mostre AS (
         SELECT ente_collaborante, SUM(com + cor) AS totc
         FROM collaborazioni_mostre CM, collaborazioni_restauri CR
         WHERE CM.ente_di_collaborazione = CR.ente_collaborante
-		GROUP BY ente_collaborante
+        GROUP BY ente_collaborante
     )
 
 SELECT ente_collaborante, totc
@@ -592,4 +579,5 @@ WITH opere_per_mostra AS (
 SELECT nome_zona, mostra, opm
 FROM Zone_ Z, opere_per_mostra OM, Mostre M
 WHERE M.zona = Z.nome_zona AND OM.mostra = M.nome_mostra AND Z.ala = 'Est'--scelta dell'utente
+
 
