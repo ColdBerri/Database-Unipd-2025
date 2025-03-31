@@ -8,8 +8,8 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/Users/jeff/Desktop/db2025/Database-Unipd-2025/c/funzioni.c" "CMakeFiles/database.dir/funzioni.c.o" "gcc" "CMakeFiles/database.dir/funzioni.c.o.d"
-  "/Users/jeff/Desktop/db2025/Database-Unipd-2025/c/main.c" "CMakeFiles/database.dir/main.c.o" "gcc" "CMakeFiles/database.dir/main.c.o.d"
+  "/home/BRN/Scrivania/Database-Unipd-2025/c/funzioni.c" "CMakeFiles/database.dir/funzioni.c.o" "gcc" "CMakeFiles/database.dir/funzioni.c.o.d"
+  "/home/BRN/Scrivania/Database-Unipd-2025/c/main.c" "CMakeFiles/database.dir/main.c.o" "gcc" "CMakeFiles/database.dir/main.c.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.
