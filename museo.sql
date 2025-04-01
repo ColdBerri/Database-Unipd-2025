@@ -464,6 +464,12 @@ INSERT INTO Collaborazioni_Mostre_temporanee (nome_mostra, ente_di_collaborazion
 ('Mostra Temporanea 2023', 'British Museum'),
 ('Mostra Temporanea 2023', 'Fondazione Beyeler');
 
+-- INDICI
+CREATE INDEX idx_quadro_nome ON Quadro USING btree(nome_quadro);
+CREATE INDEX idx_scultura_nome ON Scultura USING btree(nome_scultura);
+CREATE INDEX idx_installazione_nome ON Installazione USING btree(nome_installazione);
+CREATE INDEX idx_concettuale_nome ON Concettuale USING btree(nome_opera_concettuale);
+
 
 --QUERY 
 
@@ -579,5 +585,3 @@ WITH opere_per_mostra AS (
 SELECT nome_zona, mostra, opm
 FROM Zone_ Z, opere_per_mostra OM, Mostre M
 WHERE M.zona = Z.nome_zona AND OM.mostra = M.nome_mostra AND Z.ala = 'Est'--scelta dell'utente
-
-
