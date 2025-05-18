@@ -1,8 +1,4 @@
 DROP TABLE IF EXISTS Opere CASCADE;
-DROP TABLE IF EXISTS Quadro CASCADE;
-DROP TABLE IF EXISTS Scultura CASCADE;
-DROP TABLE IF EXISTS Installazione CASCADE;
-DROP TABLE IF EXISTS Concettuale CASCADE;
 DROP TABLE IF EXISTS Artisti CASCADE;
 DROP TABLE IF EXISTS Collaborazioni CASCADE;
 DROP TABLE IF EXISTS Mostre CASCADE;
@@ -11,6 +7,7 @@ DROP TABLE IF EXISTS Restauri CASCADE;
 DROP TABLE IF EXISTS Laboratori CASCADE;
 DROP TABLE IF EXISTS Responsabili CASCADE;
 DROP TABLE IF EXISTS Zone_ CASCADE;
+DROP TABLE IF EXISTS Visite CASACADE;
 DROP TABLE IF EXISTS Collaborazioni_Mostre_temporanee CASCADE;
 
 DROP DOMAIN IF EXISTS prezzo_quadro;
@@ -27,6 +24,7 @@ CREATE TABLE IF NOT EXISTS Artisti(
     data_di_nascita VARCHAR(64),
     data_di_morte VARCHAR(64)
 );
+
 INSERT INTO Artisti (pseudonimo, nome, cognome, nazionalità, sesso, data_di_nascita, data_di_morte) VALUES
 ('Géricault', 'Théodore', 'Géricault', 'Francese', 'Maschio', '1791-09-26', '1824-01-26'),
 ('David', 'Jacques-Louis', 'David', 'Francese', 'Maschio', '1748-08-30', '1825-12-29'),
@@ -279,126 +277,16 @@ INSERT INTO Opere (nome_opera, artista, anno_creazione, valore_di_mercato, corre
 ('How to Explain Pictures to a Dead Hare', 'Beuys', 1965, 2500000, 'Concettuale', 'Comunicazione e arte', 'Arte Concettuale'),
 ('The Treachery of Images', 'Magritte', 1929, 4000000, 'Concettuale', 'Realtà e rappresentazione', 'Arte Concettuale');
 
-CREATE TABLE IF NOT EXISTS Quadro(
-    nome_quadro VARCHAR(64) PRIMARY KEY,
-    base VARCHAR(32) NOT NULL,
-    dimensione VARCHAR(64) NOT NULL,
-    tecnica VARCHAR(64) NOT NULL,
-    FOREIGN KEY (nome_quadro) REFERENCES Opere(nome_opera)
+
+CREATE TYPE tipo_biglietto AS ENUM ('prezzo_pieno', 'ridotto_bambini', 'ridotto_over65');
+CREATE TABLE IF NOT EXISTS Visite(
+    ID_biglietto VARCHAR (64) PRIMARY KEY,
+    biglietto tipo_biglietto NOT NULL,
+    data_visita DATE NOT NULL,
+    prezzo INT NOT NULL,
+    mostra VARCHAR(64) NOT NULL,
+    FOREIGN KEY (mostra) REFERENCES Mostre(nome_mostra)
 );
-INSERT INTO Quadro (nome_quadro, base, dimensione, tecnica) VALUES
-('Guernica', 'Tela', '349x776 cm', 'Olio'),
-('Monna Lisa', 'Legno', '77x53 cm', 'Olio'),
-('La Notte Stellata', 'Tela', '73.7x92.1 cm', 'Olio'),
-('Les Nymphéas', 'Tela', '200x200 cm', 'Olio'),
-('Campbell Soup', 'Tela', '50x40 cm', 'Acrilico'),
-('The Scream', 'Cartone', '91x73.5 cm', 'Tempera'),
-('The Starry Night', 'Tela', '73.7x92.1 cm', 'Olio'),
-('The Birth of Venus', 'Tela', '172.5x278.5 cm', 'Tempera'),
-('The Last Supper', 'Muro', '460x880 cm', 'Affresco'),
-('The Water Lily Pond', 'Tela', '89x93 cm', 'Olio'),
-('The Dance', 'Tela', '260x391 cm', 'Olio'),
-('The Kiss', 'Tela', '180x180 cm', 'Olio'),
-('The Persistence of Memory', 'Tela', '24x33 cm', 'Olio'),
-('The Son of Man', 'Tela', '116x89 cm', 'Olio'),
-('The Starry Night Over the Rhone', 'Tela', '72.5x92 cm', 'Olio'),
-('The Night Café', 'Tela', '72.4x92.1 cm', 'Olio'),
-('The Card Players', 'Tela', '47.5x57 cm', 'Olio'),
-('The Luncheon on the Grass', 'Tela', '208x264 cm', 'Olio'),
-('The Balcony', 'Tela', '170x124 cm', 'Olio'),
-('The Raft of the Medusa', 'Tela', '491x716 cm', 'Olio'),
-('The Death of Marat', 'Tela', '165x128 cm', 'Olio'),
-('The Third of May 1808', 'Tela', '268x347 cm', 'Olio'),
-('The Garden of Earthly Delights', 'Legno', '220x389 cm', 'Olio'),
-('The Arnolfini Portrait', 'Legno', '82x60 cm', 'Olio'),
-('The School of Athens', 'Muro', '500x770 cm', 'Affresco'),
-('The Creation of Adam', 'Muro', '280x570 cm', 'Affresco'),
-('The Sistine Madonna', 'Tela', '265x196 cm', 'Olio'),
-('The Assumption of the Virgin', 'Tela', '690x360 cm', 'Olio'),
-('The Conversion of Saint Paul', 'Tela', '237x189 cm', 'Olio'),
-('The Calling of Saint Matthew', 'Tela', '322x340 cm', 'Olio'),
-('The Entombment of Christ', 'Tela', '300x203 cm', 'Olio'),
-('The Descent from the Cross', 'Tela', '420x315 cm', 'Olio'),
-('The Adoration of the Magi', 'Tela', '246x243 cm', 'Olio'),
-('The Annunciation', 'Tela', '98x217 cm', 'Olio'),
-('The Madonna of the Goldfinch', 'Tela', '107x77 cm', 'Olio'),
-('The Madonna of the Long Neck', 'Tela', '216x132 cm', 'Olio'),
-('The Madonna of the Chair', 'Tela', '71x71 cm', 'Olio'),
-('The Madonna of the Magnificat', 'Tela', '118x118 cm', 'Olio'),
-('The Madonna of the Rosary', 'Tela', '364x249 cm', 'Olio'),
-('The Madonna of the Yarnwinder', 'Tela', '50.2x36.4 cm', 'Olio'),
-('The Madonna of the Carnation', 'Tela', '62x47.5 cm', 'Olio'),
-('The Madonna of the Meadow', 'Tela', '113x88 cm', 'Olio'),
-('The Madonna of the Pomegranate', 'Tela', '143x143 cm', 'Olio'),
-('The Madonna of the Harpies', 'Tela', '208x178 cm', 'Olio');
-
-
-CREATE TABLE IF NOT EXISTS Scultura(
-    nome_scultura VARCHAR(64) PRIMARY KEY,
-    dimensioni VARCHAR(64) NOT NULL,
-    tecnica_scultorea VARCHAR(64) NOT NULL,
-    materiale VARCHAR(64) NOT NULL,
-    FOREIGN KEY (nome_scultura) REFERENCES Opere(nome_opera)
-);
-INSERT INTO Scultura (nome_scultura, dimensioni, tecnica_scultorea, materiale) VALUES
-('The Thinker', '190x98x150 cm', 'Fusione', 'Bronzo'),
-('Balloon Dog', '307x363x114 cm', 'Modellazione', 'Acciaio inossidabile'),
-('The Kiss', '181.5x112.3x117 cm', 'Scultura', 'Marmo'),
-('David', '517 cm', 'Scultura', 'Marmo'),
-('Venus de Milo', '204 cm', 'Scultura', 'Marmo'),
-('Pietà', '174x195 cm', 'Scultura', 'Marmo'),
-('Apollo Belvedere', '224 cm', 'Scultura', 'Marmo'),
-('Laocoön and His Sons', '208 cm', 'Scultura', 'Marmo'),
-('Winged Victory of Samothrace', '244 cm', 'Scultura', 'Marmo'),
-('Discobolus', '152 cm', 'Scultura', 'Marmo'),
-('Augustus of Prima Porta', '203 cm', 'Scultura', 'Marmo'),
-('Hermes and the Infant Dionysus', '213 cm', 'Scultura', 'Marmo'),
-('The Dying Gaul', '93 cm', 'Scultura', 'Marmo'),
-('The Boxer at Rest', '128 cm', 'Scultura', 'Bronzo'),
-('The Farnese Hercules', '317 cm', 'Scultura', 'Marmo'),
-('The Rape of Proserpina', '255 cm', 'Scultura', 'Marmo'),
-('The Ecstasy of Saint Teresa', '350 cm', 'Scultura', 'Marmo'),
-('The Gates of Hell', '600x400x100 cm', 'Scultura', 'Bronzo'),
-('The Burghers of Calais', '200x200x200 cm', 'Scultura', 'Bronzo'),
-('The Age of Bronze', '180 cm', 'Scultura', 'Bronzo');
-
-
-CREATE TABLE IF NOT EXISTS Installazione(
-    nome_installazione VARCHAR(64) PRIMARY KEY,
-    coinvolgimento_sensoriale VARCHAR(64) NOT NULL,
-    interattività VARCHAR(64) NOT NULL,
-    FOREIGN KEY (nome_installazione) REFERENCES Opere(nome_opera) 
-);
-INSERT INTO Installazione (nome_installazione, coinvolgimento_sensoriale, interattività) VALUES
-('My Bed', 'Visivo e tattile', 'Media'),
-('The Physical Impossibility of Death', 'Visivo', 'Bassa'),
-('Lightning Field', 'Visivo', 'Alta'),
-('Infinity Mirror Room', 'Visivo', 'Alta'),
-('The Weather Project', 'Visivo e tattile', 'Media'),
-('Sunflower Seeds', 'Visivo e tattile', 'Bassa'),
-('Cloud Gate', 'Visivo', 'Alta'),
-('Roden Crater', 'Visivo', 'Media'),
-('Ghost', 'Visivo', 'Bassa'),
-('Angel of the North', 'Visivo', 'Bassa');
-
-
-CREATE TABLE IF NOT EXISTS Concettuale(
-    nome_opera_concettuale VARCHAR(64) PRIMARY KEY,
-    medium_utilizzato VARCHAR(64) NOT NULL,
-    partecipazione_pubblico BOOLEAN NOT NULL,
-    FOREIGN KEY (nome_opera_concettuale) REFERENCES Opere(nome_opera) 
-);
-INSERT INTO Concettuale (nome_opera_concettuale, medium_utilizzato, partecipazione_pubblico) VALUES
-('The Artist is Present', 'Performance', TRUE),
-('For the Love of God', 'Scultura', FALSE),
-('Empty Shoe Box', 'Oggetti', FALSE),
-('One and Three Chairs', 'Oggetti', FALSE),
-('Fountain', 'Oggetti', FALSE),
-('Cut Piece', 'Performance', TRUE),
-('I Like America and America Likes Me', 'Performance', TRUE),
-('The Clock', 'Video', FALSE),
-('How to Explain Pictures to a Dead Hare', 'Performance', TRUE),
-('The Treachery of Images', 'Pittura', FALSE);
 
 
 CREATE TABLE IF NOT EXISTS Restauri (
@@ -465,62 +353,10 @@ INSERT INTO Collaborazioni_Mostre_temporanee (nome_mostra, ente_di_collaborazion
 ('Mostra Temporanea 2023', 'Fondazione Beyeler');
 
 -- INDICI
-CREATE INDEX idx_quadro_nome ON Quadro USING btree(nome_quadro);
-CREATE INDEX idx_scultura_nome ON Scultura USING btree(nome_scultura);
-CREATE INDEX idx_installazione_nome ON Installazione USING btree(nome_installazione);
-CREATE INDEX idx_concettuale_nome ON Concettuale USING btree(nome_opera_concettuale);
-
 
 --QUERY 
 
---Query 1 : scelta una mostra da utente stampare le opere presenti nella mostra e le loro caratteristiche singole
-WITH opera_costosa AS (
-    SELECT DISTINCT O1.nome_opera, O1.valore_di_mercato, O1.artista
-    FROM Opere O1, Opere O2
-    WHERE O1.nome_opera != O2.nome_opera AND O1.mostra = 'Installazioni Interattive'  -- Scelta dell'utente
-)
-
-SELECT DISTINCT ON (OC.nome_opera) 
-    OC.nome_opera, 
-    OC.valore_di_mercato, 
-    OC.artista, 
-    'Quadro' AS tipo_opera,
-    Q.base || ', ' || Q.tecnica || ', ' || Q.dimensione AS dettagli_opera
-FROM opera_costosa OC
-JOIN Quadro Q ON OC.nome_opera = Q.nome_quadro
-
-UNION ALL
-
-SELECT DISTINCT ON (OC.nome_opera)
-    OC.nome_opera, 
-    OC.valore_di_mercato, 
-    OC.artista, 
-    'Scultura' AS tipo_opera,
-    S.dimensioni || ', ' || S.materiale || ', ' || S.tecnica_scultorea AS dettagli_opera
-FROM opera_costosa OC
-JOIN Scultura S ON OC.nome_opera = S.nome_scultura
-
-UNION ALL
-
-SELECT DISTINCT ON (OC.nome_opera)
-    OC.nome_opera, 
-    OC.valore_di_mercato, 
-    OC.artista, 
-    'Installazione' AS tipo_opera,
-    I.coinvolgimento_sensoriale || ', ' || I.interattività AS dettagli_opera
-FROM opera_costosa OC
-JOIN Installazione I ON OC.nome_opera = I.nome_installazione
-
-UNION ALL
-
-SELECT DISTINCT ON (OC.nome_opera)
-    OC.nome_opera, 
-    OC.valore_di_mercato, 
-    OC.artista, 
-    'Concettuale' AS tipo_opera,
-    C.medium_utilizzato || ', ' || C.partecipazione_pubblico AS dettagli_opera
-FROM opera_costosa OC
-JOIN Concettuale C ON OC.nome_opera = C.nome_opera_concettuale;
+--Query 1 :
 
 --Query 2 : stampare l'identificativo del responsabile che ha seguito più restauri, fatti in un laboratorio esterno,
 --          con un livello di degradazione scelto da utente.
