@@ -7,7 +7,7 @@ DROP TABLE IF EXISTS Restauri CASCADE;
 DROP TABLE IF EXISTS Laboratori CASCADE;
 DROP TABLE IF EXISTS Responsabili CASCADE;
 DROP TABLE IF EXISTS Zone_ CASCADE;
-DROP TABLE IF EXISTS Visite CASACADE;
+DROP TABLE IF EXISTS Visite CASCADE;
 DROP TABLE IF EXISTS Collaborazioni_Mostre_temporanee CASCADE;
 
 DROP DOMAIN IF EXISTS prezzo_quadro;
@@ -98,11 +98,11 @@ INSERT INTO Collaborazioni (ente, tipo, pubblico) VALUES
 
 
 CREATE TABLE IF NOT EXISTS Responsabili(
-    codice_fiscale VARCHAR(16) PRIMARY KEY,
+    ID_responsabile VARCHAR(16) PRIMARY KEY,
     livello INT NOT NULL,
     CHECK(livello BETWEEN 1 AND 5)
 );
-INSERT INTO Responsabili (codice_fiscale, livello) VALUES
+INSERT INTO Responsabili (ID_responsabile, livello) VALUES
 ('RSP001', 5),
 ('RSP002', 4),
 ('RSP003', 3),
@@ -120,14 +120,14 @@ CREATE TABLE IF NOT EXISTS Zone_ (
     ala VARCHAR(64) NOT NULL,
     piano INT NOT NULL,
     responsabile VARCHAR(16) NOT NULL,
-    FOREIGN KEY (responsabile) REFERENCES Responsabili(codice_fiscale)
+    FOREIGN KEY (responsabile) REFERENCES Responsabili(ID_responsabile)
     --fare un check sul responsabile che sia almeno di livello 3 su 5
 );
 
 CREATE OR REPLACE FUNCTION check_responsabile_level()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF (SELECT livello FROM Responsabili WHERE codice_fiscale = NEW.responsabile) < 3 THEN
+    IF (SELECT livello FROM Responsabili WHERE ID_responsabile = NEW.responsabile) < 3 THEN
         RAISE EXCEPTION 'Il responsabile deve avere livello >= 3';
     END IF;
     RETURN NEW;
@@ -191,6 +191,7 @@ CREATE TABLE IF NOT EXISTS Opere(
     FOREIGN KEY (artista) REFERENCES Artisti(pseudonimo),
     FOREIGN KEY (mostra) REFERENCES MOSTRE 
 );
+
 INSERT INTO Opere (nome_opera, artista, anno_creazione, valore_di_mercato, corrente_artistica, messaggio, mostra) VALUES
 ('David', 'Picasso', 1937, 'inestimabile', 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
 ('Guernica', 'Picasso', 1937, 'inestimabile', 'Cubismo', 'Pace e guerra', 'Arte Moderna'),
@@ -287,6 +288,58 @@ CREATE TABLE IF NOT EXISTS Visite(
     mostra VARCHAR(64) NOT NULL,
     FOREIGN KEY (mostra) REFERENCES Mostre(nome_mostra)
 );
+INSERT INTO Visite (ID_biglietto, biglietto, data_visita, prezzo, mostra) VALUES
+('B001', 'prezzo_pieno', '2023-01-10', 15, 'Impressionismo'),
+('B002', 'ridotto_bambini', '2023-01-12', 8, 'Arte Moderna'),
+('B003', 'ridotto_over65', '2023-01-15', 10, 'Arte Contemporanea'),
+('B004', 'prezzo_pieno', '2023-02-01', 15, 'Rinascimento Italiano'),
+('B005', 'ridotto_bambini', '2023-02-05', 8, 'Surrealismo'),
+('B006', 'prezzo_pieno', '2023-02-07', 15, 'Sculture Classiche'),
+('B007', 'ridotto_over65', '2023-02-10', 10, 'Installazioni Interattive'),
+('B008', 'prezzo_pieno', '2023-02-15', 15, 'Arte Concettuale'),
+('B009', 'prezzo_pieno', '2023-03-01', 15, 'Mostra Temporanea 2023'),
+('B010', 'ridotto_bambini', '2023-03-03', 8, 'Arte Moderna'),
+('B011', 'ridotto_over65', '2023-03-06', 10, 'Arte Contemporanea'),
+('B012', 'prezzo_pieno', '2023-03-10', 15, 'Sculture Classiche'),
+('B013', 'prezzo_pieno', '2023-03-12', 15, 'Impressionismo'),
+('B014', 'ridotto_bambini', '2023-03-15', 8, 'Arte Moderna'),
+('B015', 'prezzo_pieno', '2023-03-18', 15, 'Rinascimento Italiano'),
+('B016', 'ridotto_over65', '2023-04-01', 10, 'Surrealismo'),
+('B017', 'prezzo_pieno', '2023-04-04', 15, 'Sculture Classiche'),
+('B018', 'prezzo_pieno', '2023-04-07', 15, 'Installazioni Interattive'),
+('B019', 'ridotto_bambini', '2023-04-10', 8, 'Arte Concettuale'),
+('B020', 'prezzo_pieno', '2023-04-15', 15, 'Mostra Temporanea 2023'),
+('B021', 'prezzo_pieno', '2023-04-20', 15, 'Arte Moderna'),
+('B022', 'ridotto_over65', '2023-04-23', 10, 'Impressionismo'),
+('B023', 'prezzo_pieno', '2023-04-27', 15, 'Arte Contemporanea'),
+('B024', 'prezzo_pieno', '2023-05-01', 15, 'Sculture Classiche'),
+('B025', 'ridotto_bambini', '2023-05-04', 8, 'Installazioni Interattive'),
+('B026', 'prezzo_pieno', '2023-05-08', 15, 'Arte Concettuale'),
+('B027', 'ridotto_over65', '2023-05-10', 10, 'Mostra Temporanea 2023'),
+('B028', 'prezzo_pieno', '2023-05-12', 15, 'Impressionismo'),
+('B029', 'prezzo_pieno', '2023-05-15', 15, 'Arte Moderna'),
+('B030', 'ridotto_bambini', '2023-05-18', 8, 'Arte Contemporanea'),
+('B031', 'prezzo_pieno', '2023-06-01', 15, 'Rinascimento Italiano'),
+('B032', 'prezzo_pieno', '2023-06-03', 15, 'Surrealismo'),
+('B033', 'ridotto_bambini', '2023-06-05', 8, 'Sculture Classiche'),
+('B034', 'prezzo_pieno', '2023-06-08', 15, 'Installazioni Interattive'),
+('B035', 'ridotto_over65', '2023-06-10', 10, 'Arte Concettuale'),
+('B036', 'prezzo_pieno', '2023-06-12', 15, 'Mostra Temporanea 2023'),
+('B037', 'prezzo_pieno', '2023-06-14', 15, 'Arte Moderna'),
+('B038', 'prezzo_pieno', '2023-06-16', 15, 'Arte Contemporanea'),
+('B039', 'ridotto_bambini', '2023-06-18', 8, 'Sculture Classiche'),
+('B040', 'prezzo_pieno', '2023-06-20', 15, 'Installazioni Interattive'),
+('B041', 'ridotto_over65', '2023-06-22', 10, 'Arte Concettuale'),
+('B042', 'prezzo_pieno', '2023-06-24', 15, 'Mostra Temporanea 2023'),
+('B043', 'ridotto_bambini', '2023-06-26', 8, 'Impressionismo'),
+('B044', 'prezzo_pieno', '2023-06-28', 15, 'Arte Moderna'),
+('B045', 'prezzo_pieno', '2023-06-30', 15, 'Arte Contemporanea'),
+('B046', 'ridotto_over65', '2023-07-01', 10, 'Rinascimento Italiano'),
+('B047', 'prezzo_pieno', '2023-07-03', 15, 'Surrealismo'),
+('B048', 'ridotto_bambini', '2023-07-05', 8, 'Sculture Classiche'),
+('B049', 'prezzo_pieno', '2023-07-07', 15, 'Arte Concettuale'),
+('B050', 'prezzo_pieno', '2023-07-09', 15, 'Mostra Temporanea 2023');
+
 
 
 CREATE TABLE IF NOT EXISTS Restauri (
@@ -356,7 +409,15 @@ INSERT INTO Collaborazioni_Mostre_temporanee (nome_mostra, ente_di_collaborazion
 
 --QUERY 
 
---Query 1 :
+--Query 1 : Selezionata da utente un'ala del museo stamapare le mostre e il loro numero di visite totale nell'ala
+--          in ordine decrescente sul numero di visite
+
+SELECT mostra, COUNT(*) AS Nvisite
+FROM Visite V, Zone_ Z, Mostre M
+WHERE M.nome_mostra = V.mostra AND Z.ala = 'Est' AND Z.nome_zona = M.zona
+GROUP BY mostra
+ORDER BY Nvisite DESC
+
 
 --Query 2 : stampare l'identificativo del responsabile che ha seguito più restauri, fatti in un laboratorio esterno,
 --          con un livello di degradazione scelto da utente.
