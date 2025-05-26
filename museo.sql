@@ -371,7 +371,8 @@ INSERT INTO Concesso (nome_mostra, ente_di_collaborazione) VALUES
 
 --QUERY 
 
---Query 1 : Stampare tutte le guide disponibili un deteminato giorno e che parlano la lingua scelta
+-- Query 1: Elencare tutte le guide che parlano una lingua specifica e sono disponibili in determinati giorni, mostrando anche le mostre collegate,
+-- ordinate per zona della mostra e codice fiscale della guida.
 
 SELECT 
     g.codice_fiscale, g.lingua_parlata,g.disponibilita,

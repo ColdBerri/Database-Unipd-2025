@@ -123,7 +123,7 @@ int check(PGresult *P, PGconn *c) {
 
 void query1(PGconn *conn) {
   char *stringa[] = {
-      "Italiano","Arte Inglese","Tedesco","Francese","Cinese"
+      "Italiano","Inglese","Tedesco","Francese","Cinese"
     };
   int n = sizeof(stringa) / sizeof(stringa[0]);
   char scelta[32];
@@ -143,21 +143,21 @@ void query1(PGconn *conn) {
     while (getchar() != '\n' && getchar() != EOF);
   }
 
-  char *stringa[] = {
+  char *s[] = {
       "lun-mer", "lun-ven", "mer-ven", "ven-dom"
     };
 
-  int n = sizeof(stringa) / sizeof(stringa[0]);
+  int n1 = sizeof(s) / sizeof(s[0]);
 
   printf("Seleziona la disponibilita\n");
-  stampa(stringa,n);
+  stampa(s,n1);
   printf("\n->");
   scanf("%d",&valore);
   while (getchar() != '\n' && getchar() != EOF);
 
   while(valore < 1 || valore > 4){
     printf("Seleziona la disponibilità(1 - 4)\n");
-    stampa(stringa,n);
+    stampa(s,n1);
     printf("\n->");
     scanf("%d",&valore);
     while (getchar() != '\n' && getchar() != EOF);
@@ -172,7 +172,7 @@ void query1(PGconn *conn) {
   else if (valore == 4)
     strcpy(scelta1," Francese");
 
-  const char *paramValues[1];
+  const char *paramValues[2];
   paramValues[0] = scelta;
   paramValues[1] = scelta1;
 
@@ -270,7 +270,7 @@ void query3(PGconn *conn){
   const char *querty =
   "WITH collaborazioni_mostre AS ( "
     "SELECT ente_di_collaborazione, COUNT(*) AS com "
-    "FROM Collaborazioni_Mostre_temporanee CM, Collaborazioni C "
+    "FROM concesso CM, Collaborazioni C "
     "WHERE C.ente = CM.ente_di_collaborazione AND C.Pubblico = $1 "
     "GROUP BY ente_di_collaborazione "
   "), "
