@@ -3,12 +3,14 @@ DROP TABLE IF EXISTS Artisti CASCADE;
 DROP TABLE IF EXISTS Collaborazioni CASCADE;
 DROP TABLE IF EXISTS Mostre CASCADE;
 DROP TABLE IF EXISTS Mostre_Temporanee CASCADE;
+DROP TABLE IF EXISTS Mostre_permanenti CASCADE;
+DROP TABLE IF EXISTS Guida CASCADE;
 DROP TABLE IF EXISTS Restauri CASCADE;
 DROP TABLE IF EXISTS Laboratori CASCADE;
 DROP TABLE IF EXISTS Responsabili CASCADE;
 DROP TABLE IF EXISTS Zone_ CASCADE;
 DROP TABLE IF EXISTS Visite CASCADE;
-DROP TABLE IF EXISTS Collaborazioni_Mostre_temporanee CASCADE;
+DROP TABLE IF EXISTS Concesso CASCADE;
 
 DROP DOMAIN IF EXISTS prezzo_quadro;
 
@@ -103,16 +105,16 @@ CREATE TABLE IF NOT EXISTS Responsabili(
     CHECK(livello BETWEEN 1 AND 5)
 );
 INSERT INTO Responsabili (codice_fiscale, livello) VALUES
-('RSP001', 5),
-('RSP002', 4),
-('RSP003', 3),
-('RSP004', 4),
-('RSP005', 5),
-('RSP006', 3),
-('RSP007', 4),
-('RSP008', 5),
-('RSP009', 3),
-('RSP010', 4);
+('RSSMRA85M01H501Z', 5),
+('VRDLGI72A41F205K', 4),
+('BNCLNZ90C12D612Y', 3),
+('FRRMRA80B22H703Q', 4),
+('NCLFNC75D15L219P', 5),
+('MNTGPP60A01H501V', 3),
+('PLLMRA88C45D969U', 4),
+('GRLLNZ77M29F205H', 5),
+('CNSMRA66A10H224W', 3),
+('SLLFNC95B18C351R', 4);
 
 
 CREATE TABLE IF NOT EXISTS Zone_ (
@@ -126,7 +128,7 @@ CREATE TABLE IF NOT EXISTS Zone_ (
 CREATE OR REPLACE FUNCTION check_responsabile()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF (SELECT livello FROM Responsabili WHERE ID_responsabile = NEW.responsabile) < 3 THEN
+    IF (SELECT livello FROM Responsabili WHERE codice_fiscale = NEW.responsabile) < 3 THEN
         RAISE EXCEPTION 'Il responsabile deve avere livello >= 3';
     END IF;
     RETURN NEW;
@@ -138,19 +140,26 @@ BEFORE INSERT OR UPDATE ON Zone_
 FOR EACH ROW EXECUTE FUNCTION check_responsabile();
 
 INSERT INTO Zone_ (nome_zona, ala, piano, responsabile) VALUES
-('Arte Moderna', 'Est', 1, 'RSP001'),
-('Arte Rinascimentale', 'Ovest', 2, 'RSP002'),
-('Arte Contemporanea', 'Nord', 3, 'RSP003'),
-('Sculture', 'Sud', 1, 'RSP004'),
-('Installazioni', 'Est', 2, 'RSP005'),
-('Arte Concettuale', 'Ovest', 3, 'RSP006'),
-('Mostre Temporanee', 'Centrale', 1, 'RSP007');
+('Arte Moderna', 'Est', 1, 'RSSMRA85M01H501Z'),
+('Arte Rinascimentale', 'Ovest', 2, 'VRDLGI72A41F205K'),
+('Arte Contemporanea', 'Nord', 3, 'BNCLNZ90C12D612Y'),
+('Sculture', 'Sud', 1, 'FRRMRA80B22H703Q'),
+('Installazioni', 'Est', 2, 'NCLFNC75D15L219P'),
+('Arte Concettuale', 'Ovest', 3, 'MNTGPP60A01H501V'),
+('Mostre Temporanee', 'Centrale', 1, 'CNSMRA66A10H224W');
 
 CREATE TABLE IF NOT EXISTS Guida(
     codice_fiscale VARCHAR(16) PRIMARY KEY,
     lingua_parlata VARCHAR(32) NOT NULL,
     disponibilita VARCHAR(64) NOT NULL
 );
+--lun-mer, lun-ven, mer-ven, ven-dom
+INSERT INTO Guida (codice_fiscale, lingua_parlata, disponibilita) VALUES
+('RSSLGI85M20H501X', 'Inglese', 'lun-mer'),
+('BNCMRA70A15F205Z', 'Francese', 'lun-ven'),
+('PLLFNC88C22D612V', 'Italiano', 'mer-ven'),
+('VRDMNL92B10H703Y', 'Tedesco', 'ven-dom' ),
+('FRRGPP75D30L219R', 'Cinese', 'ven-dom');
 
 CREATE TABLE IF NOT EXISTS Mostre(
     nome_mostra VARCHAR(64) PRIMARY KEY,
@@ -177,6 +186,13 @@ CREATE TABLE IF NOT EXISTS Mostre_permanenti(
     FOREIGN KEY (guida) REFERENCES Guida(codice_fiscale)
 );
 
+INSERT INTO Mostre_permanenti (nome_mostra, guida) VALUES
+('Impressionismo', 'RSSLGI85M20H501X'),
+('Arte Moderna', 'BNCMRA70A15F205Z'),
+('Rinascimento Italiano', 'PLLFNC88C22D612V'),
+('Sculture Classiche', 'VRDMNL92B10H703Y'),
+('Arte Concettuale', 'FRRGPP75D30L219R');
+
 CREATE TABLE IF NOT EXISTS Mostre_Temporanee(
     nome_mostra VARCHAR(64) PRIMARY KEY,
     data_inizio DATE NOT NULL,
@@ -185,8 +201,8 @@ CREATE TABLE IF NOT EXISTS Mostre_Temporanee(
     CHECK (data_inizio < data_fine),
     FOREIGN KEY (nome_mostra) REFERENCES Mostre(nome_mostra)
 );
-INSERT INTO Mostre_Temporanee (nome_mostra, data_inizio, data_fine) VALUES
-('Mostra Temporanea 2023', '2023-01-01', '2023-12-31');
+INSERT INTO Mostre_Temporanee (nome_mostra, data_inizio, data_fine,catalogo) VALUES
+('Mostra Temporanea 2023', '2023-01-01', '2023-12-31','Come sentire i colori');
 
 CREATE TABLE IF NOT EXISTS Opere(
     nome_opera VARCHAR(64) PRIMARY KEY,
@@ -289,22 +305,21 @@ INSERT INTO Opere (nome_opera, artista, anno_creazione, valore_di_mercato, corre
 
 CREATE TABLE IF NOT EXISTS Laboratori (
     nome_laboratorio VARCHAR(64) PRIMARY KEY,
-    ID_restauro VARCHAR(64) NOT NULL,
     numero_di_restauratori INT NOT NULL,
     livello_attrezzatura VARCHAR(64) NOT NULL,
     specializzazione VARCHAR(64) NOT NULL
 );
-INSERT INTO Laboratori (nome_laboratorio, ID_restauro, numero_di_restauratori, livello_attrezzatura, specializzazione) VALUES
-('Lab1', 'RES001', 5, 'Alto', 'Dipinti'),
-('Lab2', 'RES002', 7, 'Medio', 'Sculture'),
-('Lab3', 'RES003', 4, 'Basso', 'Installazioni'),
-('Lab4', 'RES004', 6, 'Alto', 'Legno'),
-('Lab5', 'RES005', 3, 'Medio', 'Quadri'),
-('Lab6', 'RES006', 8, 'Alto', 'Sculture'),
-('Lab7', 'RES007', 5, 'Medio', 'Dipinti'),
-('Lab8', 'RES008', 6, 'Alto', 'Installazioni'),
-('Lab9', 'RES009', 4, 'Basso', 'Arte Concettuale'),
-('Lab10', 'RES010', 7, 'Alto', 'Quadri');
+INSERT INTO Laboratori (nome_laboratorio, numero_di_restauratori, livello_attrezzatura, specializzazione) VALUES
+('Lab1', 5, 'Alto', 'Dipinti'),
+('Lab2', 7, 'Medio', 'Sculture'),
+('Lab3', 4, 'Basso', 'Installazioni'),
+('Lab4', 6, 'Alto', 'Legno'),
+('Lab5', 3, 'Medio', 'Quadri'),
+('Lab6', 8, 'Alto', 'Sculture'),
+('Lab7', 5, 'Medio', 'Dipinti'),
+('Lab8', 6, 'Alto', 'Installazioni'),
+('Lab9', 4, 'Basso', 'Arte Concettuale'),
+('Lab10', 7, 'Alto', 'Quadri');
 
 
 CREATE TABLE IF NOT EXISTS Restauri (
@@ -321,17 +336,17 @@ CREATE TABLE IF NOT EXISTS Restauri (
 
 );
 
-INSERT INTO Restauri (ID_restauro, opera_da_restaurare, responsabile, esterno, ente_collaborante, livello_degradazione) VALUES
-('RES001', 'Guernica', 'RSP001', FALSE, NULL, 3),
-('RES002', 'Monna Lisa', 'RSP002', TRUE, 'Tate Modern', 5),
-('RES003', 'La Notte Stellata', 'RSP003', FALSE, NULL, 2),
-('RES004', 'Les Nymphéas', 'RSP004', TRUE, 'MoMA', 4),
-('RES005', 'Campbell Soup', 'RSP005', FALSE, NULL, 3),
-('RES006', 'The Persistence of Memory', 'RSP006', TRUE, 'British Museum', 4),
-('RES007', 'Balloon Dog', 'RSP007', FALSE, NULL, 2),
-('RES008', 'The Kiss', 'RSP008', TRUE, 'UNESCO', 5),
-('RES009', 'The Thinker', 'RSP009', FALSE, NULL, 1),
-('RES010', 'Girl with Balloon', 'RSP010', TRUE, 'Fondazione Beyeler', 4);
+INSERT INTO Restauri (ID_restauro, opera_da_restaurare, responsabile, ente_collaborante,laboratorio, livello_degradazione) VALUES
+('RES001', 'Guernica', 'RSSMRA85M01H501Z', NULL,'Lab1' , 3),
+('RES002', 'Monna Lisa', 'VRDLGI72A41F205K','Tate Modern','Lab2' , 5),
+('RES003', 'La Notte Stellata', 'BNCLNZ90C12D612Y',NULL,'Lab3' , 2),
+('RES004', 'Les Nymphéas', 'FRRMRA80B22H703Q','MoMA','Lab4' , 4),
+('RES005', 'Campbell Soup', 'NCLFNC75D15L219P',NULL,'Lab5' , 3),
+('RES006', 'The Persistence of Memory', 'MNTGPP60A01H501V','British Museum','Lab6' , 4),
+('RES007', 'Balloon Dog', 'PLLMRA88C45D969U', NULL,'Lab7' , 2),
+('RES008', 'The Kiss', 'GRLLNZ77M29F205H','UNESCO','Lab8' , 5),
+('RES009', 'The Thinker', 'CNSMRA66A10H224W',NULL,'Lab9' , 1),
+('RES010', 'Girl with Balloon', 'SLLFNC95B18C351R','Fondazione Beyeler','Lab10' , 4);
 
 CREATE TABLE IF NOT EXISTS Concesso (
     nome_mostra VARCHAR(64),
@@ -389,7 +404,7 @@ WHERE Nrestauri = (SELECT MAX(Nrestauri)
 --          più con il museo sia per mostre che per restauri. inlotre stampare il numero di collaborazioni totali.
 WITH collaborazioni_mostre AS (
     SELECT ente_di_collaborazione, COUNT(*) AS com
-    FROM Collaborazioni_Mostre_temporanee CM, Collaborazioni C
+    FROM concesso CM, Collaborazioni C
     WHERE C.ente = CM.ente_di_collaborazione AND C.Pubblico = TRUE --scelta dell'utente
     GROUP BY ente_di_collaborazione
 ),
