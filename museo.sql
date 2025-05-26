@@ -98,11 +98,11 @@ INSERT INTO Collaborazioni (ente, tipo, pubblico) VALUES
 
 
 CREATE TABLE IF NOT EXISTS Responsabili(
-    ID_responsabile VARCHAR(16) PRIMARY KEY,
+    codice_fiscale VARCHAR(16) PRIMARY KEY,
     livello INT NOT NULL,
     CHECK(livello BETWEEN 1 AND 5)
 );
-INSERT INTO Responsabili (ID_responsabile, livello) VALUES
+INSERT INTO Responsabili (codice_fiscale, livello) VALUES
 ('RSP001', 5),
 ('RSP002', 4),
 ('RSP003', 3),
@@ -120,11 +120,10 @@ CREATE TABLE IF NOT EXISTS Zone_ (
     ala VARCHAR(64) NOT NULL,
     piano INT NOT NULL,
     responsabile VARCHAR(16) NOT NULL,
-    FOREIGN KEY (responsabile) REFERENCES Responsabili(ID_responsabile)
-    --fare un check sul responsabile che sia almeno di livello 3 su 5
+    FOREIGN KEY (responsabile) REFERENCES Responsabili(codice_fiscale)
 );
 
-CREATE OR REPLACE FUNCTION check_responsabile_level()
+CREATE OR REPLACE FUNCTION check_responsabile()
 RETURNS TRIGGER AS $$
 BEGIN
     IF (SELECT livello FROM Responsabili WHERE ID_responsabile = NEW.responsabile) < 3 THEN
@@ -136,8 +135,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trig_responsabile_level
 BEFORE INSERT OR UPDATE ON Zone_
-FOR EACH ROW EXECUTE FUNCTION check_responsabile_level();
-
+FOR EACH ROW EXECUTE FUNCTION check_responsabile();
 
 INSERT INTO Zone_ (nome_zona, ala, piano, responsabile) VALUES
 ('Arte Moderna', 'Est', 1, 'RSP001'),
@@ -148,6 +146,11 @@ INSERT INTO Zone_ (nome_zona, ala, piano, responsabile) VALUES
 ('Arte Concettuale', 'Ovest', 3, 'RSP006'),
 ('Mostre Temporanee', 'Centrale', 1, 'RSP007');
 
+CREATE TABLE IF NOT EXISTS Guida(
+    codice_fiscale VARCHAR(16) PRIMARY KEY,
+    lingua_parlata VARCHAR(32) NOT NULL,
+    disponibilita VARCHAR(64) NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS Mostre(
     nome_mostra VARCHAR(64) PRIMARY KEY,
@@ -167,12 +170,18 @@ INSERT INTO Mostre (nome_mostra, tema, zona) VALUES
 ('Arte Concettuale', 'Minimalismo e Concettualismo', 'Arte Concettuale'),
 ('Mostra Temporanea 2023','Tecnologia e Arte','Installazioni');
 
-
+CREATE TABLE IF NOT EXISTS Mostre_permanenti(
+    nome_mostra VARCHAR(64) PRIMARY KEY,
+    guida VARCHAR(16) NOT NULL,
+    FOREIGN KEY (nome_mostra) REFERENCES Mostre(nome_mostra),
+    FOREIGN KEY (guida) REFERENCES Guida(codice_fiscale)
+);
 
 CREATE TABLE IF NOT EXISTS Mostre_Temporanee(
     nome_mostra VARCHAR(64) PRIMARY KEY,
     data_inizio DATE NOT NULL,
     data_fine DATE NOT NULL,
+    catalogo VARCHAR(64) NOT NULL,
     CHECK (data_inizio < data_fine),
     FOREIGN KEY (nome_mostra) REFERENCES Mostre(nome_mostra)
 );
@@ -278,77 +287,35 @@ INSERT INTO Opere (nome_opera, artista, anno_creazione, valore_di_mercato, corre
 ('How to Explain Pictures to a Dead Hare', 'Beuys', 1965, 2500000, 'Concettuale', 'Comunicazione e arte', 'Arte Concettuale'),
 ('The Treachery of Images', 'Magritte', 1929, 4000000, 'Concettuale', 'Realtà e rappresentazione', 'Arte Concettuale');
 
-
-CREATE TYPE tipo_biglietto AS ENUM ('prezzo_pieno', 'ridotto_bambini', 'ridotto_over65');
-CREATE TABLE IF NOT EXISTS Visite(
-    ID_biglietto VARCHAR (64) PRIMARY KEY,
-    biglietto tipo_biglietto NOT NULL,
-    data_visita DATE NOT NULL,
-    prezzo INT NOT NULL,
-    mostra VARCHAR(64) NOT NULL,
-    FOREIGN KEY (mostra) REFERENCES Mostre(nome_mostra)
+CREATE TABLE IF NOT EXISTS Laboratori (
+    nome_laboratorio VARCHAR(64) PRIMARY KEY,
+    ID_restauro VARCHAR(64) NOT NULL,
+    numero_di_restauratori INT NOT NULL,
+    livello_attrezzatura VARCHAR(64) NOT NULL,
+    specializzazione VARCHAR(64) NOT NULL
 );
-INSERT INTO Visite (ID_biglietto, biglietto, data_visita, prezzo, mostra) VALUES
-('B001', 'prezzo_pieno', '2023-01-10', 15, 'Impressionismo'),
-('B002', 'ridotto_bambini', '2023-01-12', 8, 'Arte Moderna'),
-('B003', 'ridotto_over65', '2023-01-15', 10, 'Arte Contemporanea'),
-('B004', 'prezzo_pieno', '2023-02-01', 15, 'Rinascimento Italiano'),
-('B005', 'ridotto_bambini', '2023-02-05', 8, 'Surrealismo'),
-('B006', 'prezzo_pieno', '2023-02-07', 15, 'Sculture Classiche'),
-('B007', 'ridotto_over65', '2023-02-10', 10, 'Installazioni Interattive'),
-('B008', 'prezzo_pieno', '2023-02-15', 15, 'Arte Concettuale'),
-('B009', 'prezzo_pieno', '2023-03-01', 15, 'Mostra Temporanea 2023'),
-('B010', 'ridotto_bambini', '2023-03-03', 8, 'Arte Moderna'),
-('B011', 'ridotto_over65', '2023-03-06', 10, 'Arte Contemporanea'),
-('B012', 'prezzo_pieno', '2023-03-10', 15, 'Sculture Classiche'),
-('B013', 'prezzo_pieno', '2023-03-12', 15, 'Impressionismo'),
-('B014', 'ridotto_bambini', '2023-03-15', 8, 'Arte Moderna'),
-('B015', 'prezzo_pieno', '2023-03-18', 15, 'Rinascimento Italiano'),
-('B016', 'ridotto_over65', '2023-04-01', 10, 'Surrealismo'),
-('B017', 'prezzo_pieno', '2023-04-04', 15, 'Sculture Classiche'),
-('B018', 'prezzo_pieno', '2023-04-07', 15, 'Installazioni Interattive'),
-('B019', 'ridotto_bambini', '2023-04-10', 8, 'Arte Concettuale'),
-('B020', 'prezzo_pieno', '2023-04-15', 15, 'Mostra Temporanea 2023'),
-('B021', 'prezzo_pieno', '2023-04-20', 15, 'Arte Moderna'),
-('B022', 'ridotto_over65', '2023-04-23', 10, 'Impressionismo'),
-('B023', 'prezzo_pieno', '2023-04-27', 15, 'Arte Contemporanea'),
-('B024', 'prezzo_pieno', '2023-05-01', 15, 'Sculture Classiche'),
-('B025', 'ridotto_bambini', '2023-05-04', 8, 'Installazioni Interattive'),
-('B026', 'prezzo_pieno', '2023-05-08', 15, 'Arte Concettuale'),
-('B027', 'ridotto_over65', '2023-05-10', 10, 'Mostra Temporanea 2023'),
-('B028', 'prezzo_pieno', '2023-05-12', 15, 'Impressionismo'),
-('B029', 'prezzo_pieno', '2023-05-15', 15, 'Arte Moderna'),
-('B030', 'ridotto_bambini', '2023-05-18', 8, 'Arte Contemporanea'),
-('B031', 'prezzo_pieno', '2023-06-01', 15, 'Rinascimento Italiano'),
-('B032', 'prezzo_pieno', '2023-06-03', 15, 'Surrealismo'),
-('B033', 'ridotto_bambini', '2023-06-05', 8, 'Sculture Classiche'),
-('B034', 'prezzo_pieno', '2023-06-08', 15, 'Installazioni Interattive'),
-('B035', 'ridotto_over65', '2023-06-10', 10, 'Arte Concettuale'),
-('B036', 'prezzo_pieno', '2023-06-12', 15, 'Mostra Temporanea 2023'),
-('B037', 'prezzo_pieno', '2023-06-14', 15, 'Arte Moderna'),
-('B038', 'prezzo_pieno', '2023-06-16', 15, 'Arte Contemporanea'),
-('B039', 'ridotto_bambini', '2023-06-18', 8, 'Sculture Classiche'),
-('B040', 'prezzo_pieno', '2023-06-20', 15, 'Installazioni Interattive'),
-('B041', 'ridotto_over65', '2023-06-22', 10, 'Arte Concettuale'),
-('B042', 'prezzo_pieno', '2023-06-24', 15, 'Mostra Temporanea 2023'),
-('B043', 'ridotto_bambini', '2023-06-26', 8, 'Impressionismo'),
-('B044', 'prezzo_pieno', '2023-06-28', 15, 'Arte Moderna'),
-('B045', 'prezzo_pieno', '2023-06-30', 15, 'Arte Contemporanea'),
-('B046', 'ridotto_over65', '2023-07-01', 10, 'Rinascimento Italiano'),
-('B047', 'prezzo_pieno', '2023-07-03', 15, 'Surrealismo'),
-('B048', 'ridotto_bambini', '2023-07-05', 8, 'Sculture Classiche'),
-('B049', 'prezzo_pieno', '2023-07-07', 15, 'Arte Concettuale'),
-('B050', 'prezzo_pieno', '2023-07-09', 15, 'Mostra Temporanea 2023');
-
+INSERT INTO Laboratori (nome_laboratorio, ID_restauro, numero_di_restauratori, livello_attrezzatura, specializzazione) VALUES
+('Lab1', 'RES001', 5, 'Alto', 'Dipinti'),
+('Lab2', 'RES002', 7, 'Medio', 'Sculture'),
+('Lab3', 'RES003', 4, 'Basso', 'Installazioni'),
+('Lab4', 'RES004', 6, 'Alto', 'Legno'),
+('Lab5', 'RES005', 3, 'Medio', 'Quadri'),
+('Lab6', 'RES006', 8, 'Alto', 'Sculture'),
+('Lab7', 'RES007', 5, 'Medio', 'Dipinti'),
+('Lab8', 'RES008', 6, 'Alto', 'Installazioni'),
+('Lab9', 'RES009', 4, 'Basso', 'Arte Concettuale'),
+('Lab10', 'RES010', 7, 'Alto', 'Quadri');
 
 
 CREATE TABLE IF NOT EXISTS Restauri (
     ID_restauro VARCHAR(64) PRIMARY KEY,
     opera_da_restaurare VARCHAR(64) NOT NULL,
     responsabile VARCHAR(16) NOT NULL,
-    esterno BOOLEAN NOT NULL,
     ente_collaborante VARCHAR(64),
     livello_degradazione INT NOT NULL,
+    laboratorio VARCHAR(64) NOT NULL,
+    FOREIGN KEY (laboratorio) REFERENCES Laboratori(nome_laboratorio),
+    FOREIGN KEY (responsabile) REFERENCES Responsabili(codice_fiscale),
     FOREIGN KEY (ente_collaborante) REFERENCES Collaborazioni(ente),
     FOREIGN KEY (opera_da_restaurare) REFERENCES Opere(nome_opera)
 
@@ -366,34 +333,14 @@ INSERT INTO Restauri (ID_restauro, opera_da_restaurare, responsabile, esterno, e
 ('RES009', 'The Thinker', 'RSP009', FALSE, NULL, 1),
 ('RES010', 'Girl with Balloon', 'RSP010', TRUE, 'Fondazione Beyeler', 4);
 
-CREATE TABLE IF NOT EXISTS Laboratori (
-    nome_laboratorio VARCHAR(64) PRIMARY KEY,
-    ID_restauro VARCHAR(64) NOT NULL,
-    numero_di_restauratori INT NOT NULL,
-    livello_attrezzatura VARCHAR(64) NOT NULL,
-    specializzazione VARCHAR(64) NOT NULL,
-    FOREIGN KEY (ID_restauro) REFERENCES Restauri(ID_restauro)
-);
-INSERT INTO Laboratori (nome_laboratorio, ID_restauro, numero_di_restauratori, livello_attrezzatura, specializzazione) VALUES
-('Lab1', 'RES001', 5, 'Alto', 'Dipinti'),
-('Lab2', 'RES002', 7, 'Medio', 'Sculture'),
-('Lab3', 'RES003', 4, 'Basso', 'Installazioni'),
-('Lab4', 'RES004', 6, 'Alto', 'Legno'),
-('Lab5', 'RES005', 3, 'Medio', 'Quadri'),
-('Lab6', 'RES006', 8, 'Alto', 'Sculture'),
-('Lab7', 'RES007', 5, 'Medio', 'Dipinti'),
-('Lab8', 'RES008', 6, 'Alto', 'Installazioni'),
-('Lab9', 'RES009', 4, 'Basso', 'Arte Concettuale'),
-('Lab10', 'RES010', 7, 'Alto', 'Quadri');
-
-CREATE TABLE IF NOT EXISTS Collaborazioni_Mostre_temporanee (
+CREATE TABLE IF NOT EXISTS Concesso (
     nome_mostra VARCHAR(64),
     ente_di_collaborazione VARCHAR(64),
     PRIMARY KEY(nome_mostra, ente_di_collaborazione),
     FOREIGN KEY (nome_mostra) REFERENCES Mostre_Temporanee(nome_mostra),
     FOREIGN KEY (ente_di_collaborazione) REFERENCES Collaborazioni(ente)
 );
-INSERT INTO Collaborazioni_Mostre_temporanee (nome_mostra, ente_di_collaborazione) VALUES
+INSERT INTO Concesso (nome_mostra, ente_di_collaborazione) VALUES
 ('Mostra Temporanea 2023', 'Louvre'),
 ('Mostra Temporanea 2023', 'Tate Modern'),
 ('Mostra Temporanea 2023', 'Google Arts'),
@@ -409,15 +356,19 @@ INSERT INTO Collaborazioni_Mostre_temporanee (nome_mostra, ente_di_collaborazion
 
 --QUERY 
 
---Query 1 : Selezionata da utente un'ala del museo stamapare le mostre e il loro numero di visite totale nell'ala
---          in ordine decrescente sul numero di visite
+--Query 1 : Stampare tutte le guide disponibili un deteminato giorno e che parlano la lingua scelta
 
-SELECT mostra, COUNT(*) AS Nvisite
-FROM Visite V, Zone_ Z, Mostre M
-WHERE M.nome_mostra = V.mostra AND Z.ala = 'Est' AND Z.nome_zona = M.zona
-GROUP BY mostra
-ORDER BY Nvisite DESC
-
+SELECT 
+    g.codice_fiscale, g.lingua_parlata,g.disponibilita,
+    m.nome_mostra,m.tema,m.zona
+FROM 
+    Guida g
+JOIN 
+    Mostre m ON g.disponibilita = 'Lun-Mer'
+WHERE 
+    g.lingua_parlata = 'Inglese'
+ORDER BY 
+    m.zona, g.codice_fiscale;
 
 --Query 2 : stampare l'identificativo del responsabile che ha seguito più restauri, fatti in un laboratorio esterno,
 --          con un livello di degradazione scelto da utente.

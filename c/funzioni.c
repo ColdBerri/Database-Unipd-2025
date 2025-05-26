@@ -123,19 +123,40 @@ int check(PGresult *P, PGconn *c) {
 
 void query1(PGconn *conn) {
   char *stringa[] = {
-      "Impressionismo","Arte Moderna","Arte Contemporanea","Rinascimento Italiano","Surrealismo","Sculture Classiche","Installazioni Interattive","Dermatologia","Arte Concettuale"
+      "Italiano","Arte Inglese","Tedesco","Francese","Cinese"
     };
   int n = sizeof(stringa) / sizeof(stringa[0]);
   char scelta[32];
+  char scelta1[32];
   int valore;
-  printf("Seleziona la mostra\n");
+  printf("Seleziona la lingua\n");
   stampa(stringa,n);
   printf("\n->");
   scanf("%d",&valore);
   while (getchar() != '\n' && getchar() != EOF);
 
-  while(valore < 1 || valore > 9){
-    printf("Seleziona la mostra(1 - 9)\n");
+  while(valore < 1 || valore > 5){
+    printf("Seleziona la lingua(1 - 5)\n");
+    stampa(stringa,n);
+    printf("\n->");
+    scanf("%d",&valore);
+    while (getchar() != '\n' && getchar() != EOF);
+  }
+
+  char *stringa[] = {
+      "lun-mer", "lun-ven", "mer-ven", "ven-dom"
+    };
+
+  int n = sizeof(stringa) / sizeof(stringa[0]);
+
+  printf("Seleziona la disponibilita\n");
+  stampa(stringa,n);
+  printf("\n->");
+  scanf("%d",&valore);
+  while (getchar() != '\n' && getchar() != EOF);
+
+  while(valore < 1 || valore > 4){
+    printf("Seleziona la disponibilità(1 - 4)\n");
     stampa(stringa,n);
     printf("\n->");
     scanf("%d",&valore);
@@ -143,77 +164,32 @@ void query1(PGconn *conn) {
   }
 
   if (valore == 1)
-    strcpy(scelta,"Impressionismo");
+    strcpy(scelta1,"Italiano");
   else if (valore == 2)
-    strcpy(scelta,"Arte Moderna");
+    strcpy(scelta1,"Inglese");
   else if (valore == 3)
-    strcpy(scelta,"Arte Contemporanea");
+    strcpy(scelta1,"Tedesco");
   else if (valore == 4)
-    strcpy(scelta,"Rinascimento Italiano");
-  else if (valore == 5)
-    strcpy(scelta,"Surrealismo");
-  else if (valore == 6)
-    strcpy(scelta,"Sculture Classiche");
-  else if (valore == 7)
-    strcpy(scelta,"Installazioni Interattive");
-  else if (valore == 8)
-    strcpy(scelta,"Dermatologia");
-  else if (valore == 9)
-    strcpy(scelta,"Arte Concettuale");
+    strcpy(scelta1," Francese");
 
   const char *paramValues[1];
   paramValues[0] = scelta;
+  paramValues[1] = scelta1;
 
     const char *query = 
-    "WITH opera_costosa AS ( "
-        "SELECT DISTINCT O1.nome_opera, O1.valore_di_mercato, O1.artista "
-        "FROM Opere O1, Opere O2 "
-      "WHERE O1.nome_opera != O2.nome_opera AND O1.mostra = $1 "
-    ") "
+    "SELECT "
+    "g.codice_fiscale, g.lingua_parlata,g.disponibilita, "
+    "m.nome_mostra,m.tema,m.zona "
+    "FROM "
+    "Guida g "
+    "JOIN "
+    "Mostre m ON g.disponibilita = $1 "
+    "WHERE "
+    "g.lingua_parlata = $2 "
+    "ORDER BY "
+    "m.zona, g.codice_fiscale; "; 
 
-    "SELECT DISTINCT ON (OC.nome_opera) "
-        "OC.nome_opera, " 
-        "OC.valore_di_mercato, "
-        "OC.artista, "
-        "'Quadro' AS tipo_opera, "
-        "Q.base || ', ' || Q.tecnica || ', ' || Q.dimensione AS dettagli_opera "
-    "FROM opera_costosa OC "
-    "JOIN Quadro Q ON OC.nome_opera = Q.nome_quadro "
-
-    "UNION ALL "
-
-    "SELECT DISTINCT ON (OC.nome_opera) "
-        "OC.nome_opera, "
-        "OC.valore_di_mercato, "
-        "OC.artista, "
-        "'Scultura' AS tipo_opera, "
-        "S.dimensioni || ', ' || S.materiale || ', ' || S.tecnica_scultorea AS dettagli_opera "
-    "FROM opera_costosa OC "
-    "JOIN Scultura S ON OC.nome_opera = S.nome_scultura "
-
-    "UNION ALL "
-
-    "SELECT DISTINCT ON (OC.nome_opera) "
-        "OC.nome_opera, " 
-        "OC.valore_di_mercato, "
-        "OC.artista, "
-        "'Installazione' AS tipo_opera, "
-        "I.coinvolgimento_sensoriale || ', ' || I.interattività AS dettagli_opera "
-    "FROM opera_costosa OC "
-    "JOIN Installazione I ON OC.nome_opera = I.nome_installazione "
-
-    "UNION ALL "
-
-    "SELECT DISTINCT ON (OC.nome_opera) "
-        "OC.nome_opera, " 
-        "OC.valore_di_mercato," 
-        "OC.artista, "
-        "'Concettuale' AS tipo_opera, "
-        "C.medium_utilizzato || ', ' || C.partecipazione_pubblico AS dettagli_opera "
-    "FROM opera_costosa OC "
-    "JOIN Concettuale C ON OC.nome_opera = C.nome_opera_concettuale; ";
-
-  PGresult *res = PQexecParams(conn, query, 1, NULL, paramValues, NULL, NULL, 0);
+  PGresult *res = PQexecParams(conn, query, 2, NULL, paramValues, NULL, NULL, 0);
   if (check(res, conn) == 1) {
     return;
   }
