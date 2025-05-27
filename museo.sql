@@ -1,15 +1,13 @@
 DROP TABLE IF EXISTS Opere CASCADE;
 DROP TABLE IF EXISTS Artisti CASCADE;
 DROP TABLE IF EXISTS Collaborazioni CASCADE;
-DROP TABLE IF EXISTS Mostre CASCADE;
-DROP TABLE IF EXISTS Mostre_Temporanee CASCADE;
+DROP TABLE IF EXISTS Mostre_temporanee CASCADE;
 DROP TABLE IF EXISTS Mostre_permanenti CASCADE;
 DROP TABLE IF EXISTS Guida CASCADE;
 DROP TABLE IF EXISTS Restauri CASCADE;
 DROP TABLE IF EXISTS Laboratori CASCADE;
 DROP TABLE IF EXISTS Responsabili CASCADE;
 DROP TABLE IF EXISTS Zone_ CASCADE;
-DROP TABLE IF EXISTS Visite CASCADE;
 DROP TABLE IF EXISTS Concesso CASCADE;
 
 DROP DOMAIN IF EXISTS prezzo_quadro;
@@ -86,6 +84,7 @@ CREATE TABLE IF NOT EXISTS Collaborazioni(
     tipo VARCHAR(64) NOT NULL,
     pubblico BOOLEAN NOT NULL
 );
+
 INSERT INTO Collaborazioni (ente, tipo, pubblico) VALUES
 ('Louvre', 'Museo', TRUE),
 ('Tate Modern', 'Museo', TRUE),
@@ -98,12 +97,12 @@ INSERT INTO Collaborazioni (ente, tipo, pubblico) VALUES
 ('British Museum', 'Museo', TRUE),
 ('Fondazione Beyeler', 'Privato', FALSE);
 
-
 CREATE TABLE IF NOT EXISTS Responsabili(
-    codice_fiscale VARCHAR(16) PRIMARY KEY,
+    codice_fiscale VARCHAR(32) PRIMARY KEY,
     livello INT NOT NULL,
     CHECK(livello BETWEEN 1 AND 5)
 );
+
 INSERT INTO Responsabili (codice_fiscale, livello) VALUES
 ('RSSMRA85M01H501Z', 5),
 ('VRDLGI72A41F205K', 4),
@@ -114,16 +113,8 @@ INSERT INTO Responsabili (codice_fiscale, livello) VALUES
 ('PLLMRA88C45D969U', 4),
 ('GRLLNZ77M29F205H', 5),
 ('CNSMRA66A10H224W', 3),
-('SLLFNC95B18C351R', 4);
-
-
-CREATE TABLE IF NOT EXISTS Zone_ (
-    nome_zona VARCHAR(64) PRIMARY KEY,
-    ala VARCHAR(64) NOT NULL,
-    piano INT NOT NULL,
-    responsabile VARCHAR(16) NOT NULL,
-    FOREIGN KEY (responsabile) REFERENCES Responsabili(codice_fiscale)
-);
+('SLLFNC95B18C351R', 4),
+('SIGTBQ77B18F205R', 1);
 
 CREATE OR REPLACE FUNCTION check_responsabile()
 RETURNS TRIGGER AS $$
@@ -135,7 +126,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trig_responsabile_level
+CREATE TABLE IF NOT EXISTS Zone_ (
+    nome_zona VARCHAR(64) PRIMARY KEY,
+    ala VARCHAR(64) NOT NULL,
+    piano INT NOT NULL,
+    responsabile VARCHAR(32) NOT NULL,
+    FOREIGN KEY (responsabile) REFERENCES Responsabili(codice_fiscale)
+);
+
+CREATE TRIGGER trig_responsabile
 BEFORE INSERT OR UPDATE ON Zone_
 FOR EACH ROW EXECUTE FUNCTION check_responsabile();
 
@@ -149,10 +148,11 @@ INSERT INTO Zone_ (nome_zona, ala, piano, responsabile) VALUES
 ('Mostre Temporanee', 'Centrale', 1, 'CNSMRA66A10H224W');
 
 CREATE TABLE IF NOT EXISTS Guida(
-    codice_fiscale VARCHAR(16) PRIMARY KEY,
+    codice_fiscale VARCHAR(32) PRIMARY KEY,
     lingua_parlata VARCHAR(32) NOT NULL,
     disponibilita VARCHAR(64) NOT NULL
 );
+
 --lun-mer, lun-ven, mer-ven, ven-dom
 INSERT INTO Guida (codice_fiscale, lingua_parlata, disponibilita) VALUES
 ('RSSLGI85M20H501X', 'Inglese', 'lun-mer'),
@@ -161,48 +161,24 @@ INSERT INTO Guida (codice_fiscale, lingua_parlata, disponibilita) VALUES
 ('VRDMNL92B10H703Y', 'Tedesco', 'ven-dom' ),
 ('FRRGPP75D30L219R', 'Cinese', 'ven-dom');
 
-CREATE TABLE IF NOT EXISTS Mostre(
-    nome_mostra VARCHAR(64) PRIMARY KEY,
-    tema VARCHAR(64) NOT NULL,
-    zona VARCHAR(64) NOT NULL,
-    FOREIGN KEY (zona) REFERENCES Zone_(nome_zona)
-);
-
-INSERT INTO Mostre (nome_mostra, tema, zona) VALUES
-('Impressionismo', 'Stile Impressionista', 'Arte Moderna'),
-('Arte Moderna', 'Avanguardia', 'Arte Moderna'),
-('Arte Contemporanea', 'Postmodernismo', 'Arte Moderna'),
-('Rinascimento Italiano', 'Arte Rinascimentale', 'Arte Rinascimentale'),
-('Surrealismo', 'Movimento Surrealista', 'Arte Contemporanea'),
-('Sculture Classiche', 'Arte Greca e Romana', 'Sculture'),
-('Installazioni Interattive', 'Tecnologia e Arte', 'Installazioni'),
-('Arte Concettuale', 'Minimalismo e Concettualismo', 'Arte Concettuale'),
-('Mostra Temporanea 2023','Tecnologia e Arte','Installazioni');
-
 CREATE TABLE IF NOT EXISTS Mostre_permanenti(
     nome_mostra VARCHAR(64) PRIMARY KEY,
-    guida VARCHAR(16) NOT NULL,
-    FOREIGN KEY (nome_mostra) REFERENCES Mostre(nome_mostra),
+    guida VARCHAR(32) NOT NULL,
+    tema VARCHAR(64) NOT NULL,
+    zona VARCHAR(64) NOT NULL,
+    FOREIGN KEY (zona) REFERENCES Zone_(nome_zona),
     FOREIGN KEY (guida) REFERENCES Guida(codice_fiscale)
 );
 
-INSERT INTO Mostre_permanenti (nome_mostra, guida) VALUES
-('Impressionismo', 'RSSLGI85M20H501X'),
-('Arte Moderna', 'BNCMRA70A15F205Z'),
-('Rinascimento Italiano', 'PLLFNC88C22D612V'),
-('Sculture Classiche', 'VRDMNL92B10H703Y'),
-('Arte Concettuale', 'FRRGPP75D30L219R');
-
-CREATE TABLE IF NOT EXISTS Mostre_Temporanee(
-    nome_mostra VARCHAR(64) PRIMARY KEY,
-    data_inizio DATE NOT NULL,
-    data_fine DATE NOT NULL,
-    catalogo VARCHAR(64) NOT NULL,
-    CHECK (data_inizio < data_fine),
-    FOREIGN KEY (nome_mostra) REFERENCES Mostre(nome_mostra)
-);
-INSERT INTO Mostre_Temporanee (nome_mostra, data_inizio, data_fine,catalogo) VALUES
-('Mostra Temporanea 2023', '2023-01-01', '2023-12-31','Come sentire i colori');
+INSERT INTO Mostre_permanenti (nome_mostra, guida, tema, zona) VALUES
+('Impressionismo', 'RSSLGI85M20H501X','Stile Impressionista', 'Arte Moderna'),
+('Arte Moderna', 'BNCMRA70A15F205Z','Avanguardia', 'Arte Moderna'),
+('Rinascimento Italiano', 'PLLFNC88C22D612V','Arte Rinascimentale', 'Arte Rinascimentale'),
+('Sculture Classiche', 'VRDMNL92B10H703Y','Arte Greca e Romana', 'Sculture'),
+('Arte Concettuale', 'FRRGPP75D30L219R','Minimalismo e Concettualismo', 'Arte Concettuale'),
+('Arte Contemporanea', 'RSSLGI85M20H501X', 'Postmodernismo', 'Arte Moderna'),
+('Surrealismo', 'PLLFNC88C22D612V','Movimento Surrealista', 'Arte Contemporanea'),
+('Installazioni Interattive', 'VRDMNL92B10H703Y', 'Tecnologia e Arte', 'Installazioni');
 
 CREATE TABLE IF NOT EXISTS Opere(
     nome_opera VARCHAR(64) PRIMARY KEY,
@@ -211,10 +187,10 @@ CREATE TABLE IF NOT EXISTS Opere(
     valore_di_mercato prezzo_quadro NOT NULL,
     corrente_artistica VARCHAR(64) NOT NULL,
     messaggio TEXT NOT NULL,
-    mostra VARCHAR(64),
+    mostra VARCHAR(64) NOT NULL,
     CHECK (anno_creazione > 0 AND anno_creazione <= EXTRACT(YEAR FROM CURRENT_DATE)),
     FOREIGN KEY (artista) REFERENCES Artisti(pseudonimo),
-    FOREIGN KEY (mostra) REFERENCES MOSTRE 
+    FOREIGN KEY (mostra) REFERENCES Mostre_permanenti(nome_mostra) 
 );
 
 INSERT INTO Opere (nome_opera, artista, anno_creazione, valore_di_mercato, corrente_artistica, messaggio, mostra) VALUES
@@ -303,12 +279,29 @@ INSERT INTO Opere (nome_opera, artista, anno_creazione, valore_di_mercato, corre
 ('How to Explain Pictures to a Dead Hare', 'Beuys', 1965, 2500000, 'Concettuale', 'Comunicazione e arte', 'Arte Concettuale'),
 ('The Treachery of Images', 'Magritte', 1929, 4000000, 'Concettuale', 'Realtà e rappresentazione', 'Arte Concettuale');
 
+CREATE TABLE IF NOT EXISTS Mostre_temporanee(
+    nome_mostra VARCHAR(64) PRIMARY KEY,
+    data_inizio DATE NOT NULL,
+    data_fine DATE NOT NULL,
+    catalogo VARCHAR(64) NOT NULL,
+    tema VARCHAR(64) NOT NULL,
+    zona VARCHAR(64) NOT NULL,
+    opera VARCHAR(64) NOT NULL,
+    FOREIGN KEY (opera) REFERENCES Opere(nome_opera),
+    FOREIGN KEY (zona) REFERENCES Zone_(nome_zona),
+    CHECK (data_inizio < data_fine)
+);
+
+INSERT INTO Mostre_Temporanee (nome_mostra, data_inizio, data_fine,catalogo, tema, zona, opera) VALUES
+('Mostra Temporanea 2023', '2023-01-01', '2023-12-31','Come-sentire-i-colori','Minimalismo e Concettualismo', 'Arte Concettuale','The Treachery of Images');
+
 CREATE TABLE IF NOT EXISTS Laboratori (
     nome_laboratorio VARCHAR(64) PRIMARY KEY,
     numero_di_restauratori INT NOT NULL,
     livello_attrezzatura VARCHAR(64) NOT NULL,
     specializzazione VARCHAR(64) NOT NULL
 );
+
 INSERT INTO Laboratori (nome_laboratorio, numero_di_restauratori, livello_attrezzatura, specializzazione) VALUES
 ('Lab1', 5, 'Alto', 'Dipinti'),
 ('Lab2', 7, 'Medio', 'Sculture'),
@@ -321,11 +314,10 @@ INSERT INTO Laboratori (nome_laboratorio, numero_di_restauratori, livello_attrez
 ('Lab9', 4, 'Basso', 'Arte Concettuale'),
 ('Lab10', 7, 'Alto', 'Quadri');
 
-
 CREATE TABLE IF NOT EXISTS Restauri (
     ID_restauro VARCHAR(64) PRIMARY KEY,
     opera_da_restaurare VARCHAR(64) NOT NULL,
-    responsabile VARCHAR(16) NOT NULL,
+    responsabile VARCHAR(32) NOT NULL,
     ente_collaborante VARCHAR(64),
     livello_degradazione INT NOT NULL,
     laboratorio VARCHAR(64) NOT NULL,
@@ -333,7 +325,6 @@ CREATE TABLE IF NOT EXISTS Restauri (
     FOREIGN KEY (responsabile) REFERENCES Responsabili(codice_fiscale),
     FOREIGN KEY (ente_collaborante) REFERENCES Collaborazioni(ente),
     FOREIGN KEY (opera_da_restaurare) REFERENCES Opere(nome_opera)
-
 );
 
 INSERT INTO Restauri (ID_restauro, opera_da_restaurare, responsabile, ente_collaborante,laboratorio, livello_degradazione) VALUES
@@ -352,9 +343,10 @@ CREATE TABLE IF NOT EXISTS Concesso (
     nome_mostra VARCHAR(64),
     ente_di_collaborazione VARCHAR(64),
     PRIMARY KEY(nome_mostra, ente_di_collaborazione),
-    FOREIGN KEY (nome_mostra) REFERENCES Mostre_Temporanee(nome_mostra),
+    FOREIGN KEY (nome_mostra) REFERENCES Mostre_temporanee(nome_mostra),
     FOREIGN KEY (ente_di_collaborazione) REFERENCES Collaborazioni(ente)
 );
+
 INSERT INTO Concesso (nome_mostra, ente_di_collaborazione) VALUES
 ('Mostra Temporanea 2023', 'Louvre'),
 ('Mostra Temporanea 2023', 'Tate Modern'),
