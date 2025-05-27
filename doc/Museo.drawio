@@ -251,13 +251,13 @@
                     <mxGeometry x="235" y="287.5" width="50" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="Yn2UF99OzoSKR1iccTGJ-41" value="cognome" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
-                    <mxGeometry x="295" y="297" width="70" height="30" as="geometry"/>
+                    <mxGeometry x="279" y="285" width="70" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="Yn2UF99OzoSKR1iccTGJ-42" value="nazionalità" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="152.5" y="409" width="80" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="Yn2UF99OzoSKR1iccTGJ-43" value="sesso" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
-                    <mxGeometry x="331" y="332" width="50" height="30" as="geometry"/>
+                    <mxGeometry x="324" y="320.5" width="50" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="Yn2UF99OzoSKR1iccTGJ-44" value="data di&lt;div&gt;&amp;nbsp;nascita&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="128" y="370.5" width="60" height="40" as="geometry"/>
@@ -266,7 +266,7 @@
                     <mxGeometry x="129" y="329.5" width="60" height="40" as="geometry"/>
                 </mxCell>
                 <mxCell id="Yn2UF99OzoSKR1iccTGJ-46" value="numero&amp;nbsp;&lt;div&gt;opere&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
-                    <mxGeometry x="328" y="376.5" width="70" height="40" as="geometry"/>
+                    <mxGeometry x="306" y="395.5" width="70" height="40" as="geometry"/>
                 </mxCell>
                 <mxCell id="Yn2UF99OzoSKR1iccTGJ-80" value="" style="endArrow=none;html=1;rounded=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" parent="1" target="AryeixgYwKDA9CnlknnB-269" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
