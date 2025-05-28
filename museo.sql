@@ -9,6 +9,7 @@ DROP TABLE IF EXISTS Laboratori CASCADE;
 DROP TABLE IF EXISTS Responsabili CASCADE;
 DROP TABLE IF EXISTS Zone_ CASCADE;
 DROP TABLE IF EXISTS Concesso CASCADE;
+DROP TABLE IF EXISTS Guidata CASCADE;
 
 DROP DOMAIN IF EXISTS prezzo_quadro;
 
@@ -163,22 +164,20 @@ INSERT INTO Guida (codice_fiscale, lingua_parlata, disponibilita) VALUES
 
 CREATE TABLE IF NOT EXISTS Mostre_permanenti(
     nome_mostra VARCHAR(64) PRIMARY KEY,
-    guida VARCHAR(32) NOT NULL,
     tema VARCHAR(64) NOT NULL,
     zona VARCHAR(64) NOT NULL,
-    FOREIGN KEY (zona) REFERENCES Zone_(nome_zona),
-    FOREIGN KEY (guida) REFERENCES Guida(codice_fiscale)
+    FOREIGN KEY (zona) REFERENCES Zone_(nome_zona)
 );
 
-INSERT INTO Mostre_permanenti (nome_mostra, guida, tema, zona) VALUES
-('Impressionismo', 'RSSLGI85M20H501X','Stile Impressionista', 'Arte Moderna'),
-('Arte Moderna', 'BNCMRA70A15F205Z','Avanguardia', 'Arte Moderna'),
-('Rinascimento Italiano', 'PLLFNC88C22D612V','Arte Rinascimentale', 'Arte Rinascimentale'),
-('Sculture Classiche', 'VRDMNL92B10H703Y','Arte Greca e Romana', 'Sculture'),
-('Arte Concettuale', 'FRRGPP75D30L219R','Minimalismo e Concettualismo', 'Arte Concettuale'),
-('Arte Contemporanea', 'RSSLGI85M20H501X', 'Postmodernismo', 'Arte Moderna'),
-('Surrealismo', 'PLLFNC88C22D612V','Movimento Surrealista', 'Arte Contemporanea'),
-('Installazioni Interattive', 'VRDMNL92B10H703Y', 'Tecnologia e Arte', 'Installazioni');
+INSERT INTO Mostre_permanenti (nome_mostra, tema, zona) VALUES
+('Impressionismo','Stile Impressionista', 'Arte Moderna'),
+('Arte Moderna', 'Avanguardia', 'Arte Moderna'),
+('Rinascimento Italiano','Arte Rinascimentale', 'Arte Rinascimentale'),
+('Sculture Classiche','Arte Greca e Romana', 'Sculture'),
+('Arte Concettuale', 'Minimalismo e Concettualismo', 'Arte Concettuale'),
+('Arte Contemporanea','Postmodernismo', 'Arte Moderna'),
+('Surrealismo', 'Movimento Surrealista', 'Arte Contemporanea'),
+('Installazioni Interattive', 'Tecnologia e Arte', 'Installazioni');
 
 CREATE TABLE IF NOT EXISTS Opere(
     nome_opera VARCHAR(64) PRIMARY KEY,
@@ -292,7 +291,7 @@ CREATE TABLE IF NOT EXISTS Mostre_temporanee(
     CHECK (data_inizio < data_fine)
 );
 
-INSERT INTO Mostre_Temporanee (nome_mostra, data_inizio, data_fine,catalogo, tema, zona, opera) VALUES
+INSERT INTO Mostre_temporanee (nome_mostra, data_inizio, data_fine,catalogo, tema, zona, opera) VALUES
 ('Mostra Temporanea 2023', '2023-01-01', '2023-12-31','Come-sentire-i-colori','Minimalismo e Concettualismo', 'Arte Concettuale','The Treachery of Images');
 
 CREATE TABLE IF NOT EXISTS Laboratori (
@@ -359,24 +358,48 @@ INSERT INTO Concesso (nome_mostra, ente_di_collaborazione) VALUES
 ('Mostra Temporanea 2023', 'British Museum'),
 ('Mostra Temporanea 2023', 'Fondazione Beyeler');
 
+CREATE TABLE IF NOT EXISTS Guidata(
+    codice_fiscale_guida VARCHAR(16),
+    nome_mostra VARCHAR(64),
+    PRIMARY KEY(codice_fiscale_guida, nome_mostra),
+    FOREIGN KEY (codice_fiscale_guida) REFERENCES Guida(codice_fiscale),
+    FOREIGN KEY (nome_mostra) REFERENCES Mostre_permanenti(nome_mostra)
+);
+
+INSERT INTO Guidata(codice_fiscale_guida,nome_mostra) VALUES
+('RSSLGI85M20H501X', 'Impressionismo' ),
+('BNCMRA70A15F205Z', 'Arte Moderna' ),
+('PLLFNC88C22D612V', 'Impressionismo' ),
+('VRDMNL92B10H703Y', 'Arte Moderna' ),
+('FRRGPP75D30L219R', 'Arte Concettuale' ),
+('RSSLGI85M20H501X', 'Rinascimento Italiano' ),
+('BNCMRA70A15F205Z', 'Arte Contemporanea' ),
+('PLLFNC88C22D612V', 'Surrealismo' ),
+('VRDMNL92B10H703Y', 'Rinascimento Italiano' ),
+('FRRGPP75D30L219R', 'Installazioni Interattive' );
+
 -- INDICI
 
 --QUERY 
 
--- Query 1: Elencare tutte le guide che parlano una lingua specifica e sono disponibili in determinati giorni, mostrando anche le mostre collegate,
--- ordinate per zona della mostra e codice fiscale della guida.
+-- Query 1: stampare codice_fiscale, nome_mostra, tema, zona delle mostre dove è dispobile la guida che parla la ligua scelta
+--ed è disponibile nei giorni scelti
 
 SELECT 
-    g.codice_fiscale, g.lingua_parlata,g.disponibilita,
-    m.nome_mostra,m.tema,m.zona
+    g.codice_fiscale,
+    mp.nome_mostra,
+    mp.tema,
+    mp.zona
 FROM 
-    Guida g
+    Guidata gd
 JOIN 
-    Mostre m ON g.disponibilita = 'Lun-Mer'
+    Guida g ON gd.codice_fiscale_guida = g.codice_fiscale
+JOIN 
+    Mostre_permanenti mp ON gd.nome_mostra = mp.nome_mostra
 WHERE 
-    g.lingua_parlata = 'Inglese'
+    g.lingua_parlata = 'Inglese' AND g.disponibilita = 'lun-mer'
 ORDER BY 
-    m.zona, g.codice_fiscale;
+    g.codice_fiscale, mp.nome_mostra;
 
 --Query 2 : stampare l'identificativo del responsabile che ha seguito più restauri, fatti in un laboratorio esterno,
 --          con un livello di degradazione scelto da utente.
@@ -439,5 +462,5 @@ WITH opere_per_mostra AS (
 )
 
 SELECT nome_zona, mostra, opm
-FROM Zone_ Z, opere_per_mostra OM, Mostre M
+FROM Zone_ Z, opere_per_mostra OM, Mostre_permanenti M
 WHERE M.zona = Z.nome_zona AND OM.mostra = M.nome_mostra AND Z.ala = 'Est'--scelta dell'utente

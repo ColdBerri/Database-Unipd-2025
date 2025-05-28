@@ -29,7 +29,7 @@ void stampa(char **st, int numC) {
 }
 
 void listaQuer() {
-  printf("1) Mostra le opere costose di una mostra\n");
+  printf("1) Mostra le mostre con una specifica guida disponibile\n");
   printf("2) Mostra il responsabile con il maggior numero di restauri\n");
   printf("3) Mostra l'ente con il maggior numero di collaborazioni\n");
   printf("4) Mostra le mostre con almeno due artisti\n");
@@ -129,6 +129,7 @@ void query1(PGconn *conn) {
   char scelta[32];
   char scelta1[32];
   int valore;
+  int valore1;
   printf("Seleziona la lingua\n");
   stampa(stringa,n);
   printf("\n->");
@@ -152,42 +153,57 @@ void query1(PGconn *conn) {
   printf("Seleziona la disponibilita\n");
   stampa(s,n1);
   printf("\n->");
-  scanf("%d",&valore);
+  scanf("%d",&valore1);
   while (getchar() != '\n' && getchar() != EOF);
 
-  while(valore < 1 || valore > 4){
+  while(valore1 < 1 || valore1 > 4){
     printf("Seleziona la disponibilità(1 - 4)\n");
     stampa(s,n1);
     printf("\n->");
-    scanf("%d",&valore);
+    scanf("%d",&valore1);
     while (getchar() != '\n' && getchar() != EOF);
   }
 
   if (valore == 1)
     strcpy(scelta1,"Italiano");
   else if (valore == 2)
-    strcpy(scelta1,"Inglese");
-  else if (valore == 3)
-    strcpy(scelta1,"Tedesco");
-  else if (valore == 4)
-    strcpy(scelta1," Francese");
+    strcpy(scelta,"Inglese");
+  else if (valore1 == 3)
+    strcpy(scelta,"Tedesco");
+  else if (valore1 == 4)
+    strcpy(scelta," Francese");
+    else if (valore1 == 5)
+    strcpy(scelta," Cinese");
+
+  if (valore1 == 1)
+    strcpy(scelta1,"lun-mer");
+  else if (valore1 == 2)
+    strcpy(scelta1,"lun-ven");
+  else if (valore1 == 3)
+    strcpy(scelta1,"mer-ven");
+  else if (valore1 == 4)
+    strcpy(scelta1," ven-dom");
 
   const char *paramValues[2];
   paramValues[0] = scelta;
   paramValues[1] = scelta1;
 
     const char *query = 
-    "SELECT "
-    "g.codice_fiscale, g.lingua_parlata,g.disponibilita, "
-    "m.nome_mostra,m.tema,m.zona "
-    "FROM "
-    "Guida g "
-    "JOIN "
-    "Mostre m ON g.disponibilita = $1 "
-    "WHERE "
-    "g.lingua_parlata = $2 "
-    "ORDER BY "
-    "m.zona, g.codice_fiscale; "; 
+"SELECT "
+"    g.codice_fiscale, "
+"    mp.nome_mostra, "
+"    mp.tema, "
+"    mp.zona "
+"FROM "
+"    Guidata gd "
+"JOIN "
+"    Guida g ON gd.codice_fiscale_guida = g.codice_fiscale "
+"JOIN "
+"    Mostre_permanenti mp ON gd.nome_mostra = mp.nome_mostra "
+"WHERE "
+"    g.lingua_parlata = $1 AND g.disponibilita = $2 "
+"ORDER BY  "
+"    g.codice_fiscale, mp.nome_mostra; ";
 
   PGresult *res = PQexecParams(conn, query, 2, NULL, paramValues, NULL, NULL, 0);
   if (check(res, conn) == 1) {
@@ -363,7 +379,7 @@ paramValues[0] = scelta;
   ") "
 
 "SELECT nome_zona, mostra, opm "
-"FROM Zone_ Z, opere_per_mostra OM, Mostre M "
+"FROM Zone_ Z, opere_per_mostra OM, Mostre_permanenti M "
 "WHERE M.zona = Z.nome_zona AND OM.mostra = M.nome_mostra AND Z.ala = $1; ";
 
 PGresult *res = PQexecParams(conn, query, 1, NULL, paramValues, NULL, NULL, 0);
