@@ -379,7 +379,7 @@ INSERT INTO Guidata(codice_fiscale_guida,nome_mostra) VALUES
 ('FRRGPP75D30L219R', 'Installazioni Interattive' );
 
 -- INDICI
-CREATE INDEX idx_guidata_cf_guida ON Guidata(codice_fiscale_guida);
+CREATE INDEX idx_guidata_cf_guida ON Guida(codice_fiscale,disponibilita);
 CREATE INDEX idx_mostre_nome ON Mostre_permanenti(nome_mostra);
 
 --QUERY 
