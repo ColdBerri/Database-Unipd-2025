@@ -380,7 +380,6 @@ INSERT INTO Guidata(codice_fiscale_guida,nome_mostra) VALUES
 
 -- INDICI
 CREATE INDEX idx_guidata_cf_guida ON Guidata(codice_fiscale_guida);
-
 CREATE INDEX idx_mostre_nome ON Mostre_permanenti(nome_mostra);
 
 --QUERY 
